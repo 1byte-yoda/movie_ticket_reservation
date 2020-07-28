@@ -1,0 +1,13 @@
+# Environment files
+env/
+
+# Vscode files
+.vscode/
+.ropeproject/
+settings.json
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*.pyc
+
