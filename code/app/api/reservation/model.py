@@ -1,144 +1,74 @@
-import pymysql
+from datetime import datetime
+
+from db import db
+from ..account.model import AccountModel
+from ...utils import deserialize_datetime
 
 
-class ReservationModel:
+class ReservationModel(db.Model):
     """Docstring here."""
 
-    def __init__(self, id=None, account_id=None, movie_screen_id=None, head_count=None,
-                 reserve_datetime="", cancel_datetime=""):
+    __tablename__ = "reservation"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    head_count = db.Column(db.Integer)
+    reserve_datetime = db.Column(db.DateTime, default=datetime.now)
+    cancel_datetime = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now,
+                           onupdate=datetime.now)
+
+    account_id = db.Column(db.Integer, db.ForeignKey("account.id"))
+    account = db.relationship(AccountModel, backref="account")
+
+    def __init__(self, id=None, account_id=None, head_count=None,
+                 reserve_datetime=None, cancel_datetime=None):
         """Docstring here."""
         self.id = id
         self.account_id = account_id
-        self.movie_screen_id = movie_screen_id
         self.head_count = head_count
         self.reserve_datetime = reserve_datetime
         self.cancel_datetime = cancel_datetime
+        self.created_at = None
+        self.updated_at = None
+
+    def json(self):
+        """JSON representation of the reservation model."""
+        return {
+            "id": self.id, "account_id": self.account_id,
+            "head_count": self.head_count,
+            "reserve_datetime": deserialize_datetime(self.reserve_datetime),
+            "cancel_datetime": deserialize_datetime(self.cancel_datetime),
+            "created_at": deserialize_datetime(self.created_at),
+            "updated_at": deserialize_datetime(self.updated_at)
+        }
 
     @classmethod
     def find_by_id(cls, *, id_):
         """Docstring here."""
-        connection = pymysql.connect(host="localhost", user="root", password="123456",
-                                     db="anonymouse", charset="utf8mb4",
-                                     cursorclass=pymysql.cursors.DictCursor)
-        try:
-            with connection.cursor() as cursor:
-                sql = "SELECT * FROM reservation WHERE id=%s"
-                cursor.execute(sql, (id_,))
-                temp_reservation = cursor.fetchone()
-        except:
-            return {"message": "An error occured."}, 500
-        finally:
-            connection.close()
-
-        if temp_reservation["reserve_datetime"]:
-            temp_reservation["reserve_datetime"] = temp_reservation["reserve_datetime"].strftime("%Y-%m-%d %H:%M:%S")
-        if temp_reservation["cancel_datetime"]:
-            temp_reservation["cancel_datetime"] = temp_reservation["cancel_datetime"].strftime("%Y-%m-%d %H:%M:%S")
+        temp_reservation = cls.query.filter_by(id=id_).first()
         return temp_reservation
 
     @classmethod
-    def find_id_by_account_movie_screen(cls, *, account_id, movie_screen_id):  # Move this on its own class
+    def find_by_account_movie_screen(cls, *, account_id, movie_screen_id):  # Move this on its own class
         """Docstring here."""
-        connection = pymysql.connect(host="localhost", user="root", password="123456",
-                                     db="anonymouse", charset="utf8mb4",
-                                     cursorclass=pymysql.cursors.DictCursor)
-        try:
-            with connection.cursor() as cursor:
-                sql = "SELECT * FROM reservation WHERE account_id=%s AND movie_screen_id=%s"
-                cursor.execute(sql, (account_id, movie_screen_id))
-                temp_reservation = cursor.fetchone()
-        except:
-            return {"message": "An error occured."}, 500
-        finally:
-            connection.close()
-
-        if temp_reservation["reserve_datetime"]:
-            temp_reservation["reserve_datetime"] = temp_reservation["reserve_datetime"].strftime("%Y-%m-%d %H:%M:%S")
-        if temp_reservation["cancel_datetime"]:
-            temp_reservation["cancel_datetime"] = temp_reservation["cancel_datetime"].strftime("%Y-%m-%d %H:%M:%S")
+        temp_reservation = cls.query.filter_by(account_id=account_id,
+                                               movie_screen_id=movie_screen_id).first()
         return temp_reservation
 
-    def insert(self):
+    def save_to_db(self):
         """Docstring here."""
-        connection = pymysql.connect(host="localhost", user="root", password="123456",
-                                     db="anonymouse", charset="utf8mb4",
-                                     cursorclass=pymysql.cursors.DictCursor)
-        try:
-            with connection.cursor() as cursor:
-                sql = """INSERT INTO reservation
-                (`account_id`, `movie_screen_id`, `head_count`,
-                 `reserve_datetime`, `cancel_datetime`)
-                 VALUES (%s, %s, %s, %s, %s)"""
-                new_reservation = (self.account_id,
-                                   self.movie_screen_id,
-                                   self.head_count,
-                                   self.reserve_datetime,
-                                   self.cancel_datetime)
-                cursor.execute(sql, new_reservation)
-            connection.commit()
-        except:
-            return {"message": "An error occured."}, 500
-        finally:
-            connection.close()
+        db.session.add(self)
+        db.session.commit()
 
-    def update(self):
+    def update(self, *, data):
         """Docstring here."""
-        connection = pymysql.connect(host="localhost", user="root", password="123456",
-                                     db="anonymouse", charset="utf8mb4",
-                                     cursorclass=pymysql.cursors.DictCursor)
-        try:
-            with connection.cursor() as cursor:
-                sql = """UPDATE reservation SET `head_count`=%s,
-                         `movie_screen_id`=%s WHERE id=%s;"""
-                updated_reservation = (self.head_count,
-                                       self.movie_screen_id,
-                                       self.id)
-                cursor.execute(sql, updated_reservation)
-            connection.commit()
-        except:
-            return {"message": "An error occured."}, 500
-        finally:
-            connection.close()
+        self.head_count = data["head_count"]
+        self.reserve_datetime = data["reserve_datetime"]
+        db.session.commit()
 
-    def cancel(self):
+    def cancel(self, *, updated_cancel_datetime):
         """Docstring here."""
-        connection = pymysql.connect(host="localhost", user="root", password="123456",
-                                     db="anonymouse", charset="utf8mb4",
-                                     cursorclass=pymysql.cursors.DictCursor)
-        try:
-            with connection.cursor() as cursor:
-                sql = """UPDATE reservation SET `cancel_datetime`=%s WHERE id=%s"""
-                updated_reservation = (self.cancel_datetime, self.id)
-                cursor.execute(sql, updated_reservation)
-            connection.commit()
-        except:
-            return {"message": "An error occured."}, 500
-        finally:
-            connection.close()
-
-
-class ReservationListModel:
-    """Docstring here."""
-
-    @staticmethod
-    def find_all_reservation():
-        """Docstring here."""
-        connection = pymysql.connect(host="localhost", user="root", password="123456",
-                                     db="anonymouse", charset="utf8mb4",
-                                     cursorclass=pymysql.cursors.DictCursor)
-        try:
-            with connection.cursor() as cursor:
-                sql = "SELECT * FROM reservation;"
-                cursor.execute(sql)
-                temp_reservations = cursor.fetchall()
-        except:
-            return {"message": "An error occured."}, 500
-        finally:
-            connection.close()
-
-        for reservation in temp_reservations:
-            if reservation["reserve_datetime"]:
-                reservation["reserve_datetime"] = reservation["reserve_datetime"].strftime("%Y-%m-%d %H:%M:%S")
-            if reservation["cancel_datetime"]:
-                reservation["cancel_datetime"] = reservation["cancel_datetime"].strftime("%Y-%m-%d %H:%M:%S")
-        return temp_reservations
+        self.cancel_datetime = updated_cancel_datetime
+        db.session.commit()
