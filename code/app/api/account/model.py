@@ -1,13 +1,12 @@
 import pymysql
-from flask_restful import Resource, reqparse
 
 
-class Account:
+class AccountModel:
     """Proxy class to substitute database user table."""
 
     TABLE_NAME = "account"
 
-    def __init__(self, *, id, email, password):
+    def __init__(self, *, id=None, email="", password=""):
         """Docstring here."""
         self.id = id
         self.email = email
@@ -51,33 +50,17 @@ class Account:
             connection.close()
         return account
 
-
-class AccountRegister(Resource):
-    """Docstring Here."""
-
-    TABLE_NAME = "account"
-
-    parser = reqparse.RequestParser()
-    parser.add_argument(name="email", type=str, required=True,
-                        help="This field cannot be left blank!")
-    parser.add_argument(name="password", type=str, required=True,
-                        help="This field cannot be left blank!")
-
-    def post(self):
-        """Docstring Here."""
-        data = AccountRegister.parser.parse_args()
-
-        if Account.find_by_email(email=data["email"]):
-            return {"message": "Account with that email already exists."}, 400
-
+    def register(self):
+        """Docstring here."""
         connection = pymysql.connect(host="localhost", user="root", password="123456",
                                      db="anonymouse", charset="utf8mb4",
                                      cursorclass=pymysql.cursors.DictCursor)
         try:
             with connection.cursor() as cursor:
                 sql = f"INSERT INTO {self.TABLE_NAME} (`email`, `password`) VALUES (%s, %s);"
-                cursor.execute(sql, (data["email"], data["password"]))
+                cursor.execute(sql, (self.email, self.password))
                 connection.commit()
+        except:
+            return {"message": "An error occured."}, 500
         finally:
             connection.close()
-        return {"message": "Account created successfully."}, 201
