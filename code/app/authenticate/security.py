@@ -1,4 +1,4 @@
-from ..api.account.model import AccountModel
+from ..api.models.account import AccountModel
 
 from werkzeug.security import safe_str_cmp
 

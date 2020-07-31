@@ -1,8 +1,8 @@
-RESERVATION_ROUTES = [
-    "/reservation/create",
-    "/reservation/update",
-    "/reservation/<int:id_>",
-    "/reservation/cancel"
+SEAT_RESERVATION_ROUTES = [
+    "/seat-reservation/create",
+    "/seat-reservation/update",
+    "/seat-reservation",
+    "/seat-reservation/cancel"
 ]
 
-RESERVATION_LIST_ROUTES = ["/reservations"]
+SEAT_RESERVATION_LIST_ROUTES = ["/seat-reservations"]

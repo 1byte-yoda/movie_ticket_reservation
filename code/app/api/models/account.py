@@ -7,7 +7,7 @@ from db import db
 class AccountTypeEnum(enum.Enum):
     """Account type for SQLAlchemy Data Type."""
 
-    user = "user"
+    user = "regular"
     admin = "admin"
 
 
@@ -24,17 +24,19 @@ class AccountModel(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow,
                            onupdate=datetime.utcnow)
 
-    def __init__(self, *, id=None, email="", password=""):
+    def __init__(self, *, id=None, email="", password="", type=""):
         """Docstring here."""
         self.id = id
         self.email = email
         self.password = password
+        self.type = type
         self.created_at = None
         self.updated_at = None
 
     def json(self):
-        """JSON representation of this object."""
-        return {"id": self.id, "email": self.email, "password": self.password,
+        """JSON representation of the account model."""
+        return {"id": self.id, "email": self.email,
+                "password": self.password, "type": self.type,
                 "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                 "updated_at": self.updated_at.strftime("%Y-%m-%d %H:%M:%S")}
 

@@ -10,4 +10,4 @@ settings.json
 __pycache__/
 *.py[cod]
 *.pyc
-
+code/app/create_seat_list.py

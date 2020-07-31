@@ -1,6 +1,6 @@
 from flask_restful import Resource, reqparse
 
-from .model import AccountModel
+from ..models.account import AccountModel
 
 
 class AccountRegisterResource(Resource):
@@ -12,6 +12,8 @@ class AccountRegisterResource(Resource):
     parser.add_argument(name="email", type=str, required=True,
                         help="This field cannot be left blank!")
     parser.add_argument(name="password", type=str, required=True,
+                        help="This field cannot be left blank!")
+    parser.add_argument(name="type", type=str, required=True,
                         help="This field cannot be left blank!")
 
     def post(self):

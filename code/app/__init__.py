@@ -4,10 +4,12 @@ from datetime import timedelta
 from flask import Flask
 from flask_restful import Api
 
-from .api.account.resource import AccountRegisterResource
-from .api.reservation.resource import ReservationResource, ReservationListResource
+from .api.resources.account import AccountRegisterResource
+from .api.resources.seat_reservation import (
+    SeatReservationResource, SeatReservationListResource
+)
 from .authenticate import jwt
-from .routes import RESERVATION_LIST_ROUTES, RESERVATION_ROUTES
+from .routes import SEAT_RESERVATION_LIST_ROUTES, SEAT_RESERVATION_ROUTES
 from db import db
 
 api = Api()
@@ -23,8 +25,8 @@ def create_app(*, config_name=""):
     app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://root:123456@localhost/anonymouse"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    api.add_resource(ReservationResource, *RESERVATION_ROUTES)
-    api.add_resource(ReservationListResource, *RESERVATION_LIST_ROUTES)
+    api.add_resource(SeatReservationResource, *SEAT_RESERVATION_ROUTES)
+    api.add_resource(SeatReservationListResource, *SEAT_RESERVATION_LIST_ROUTES)
     api.add_resource(AccountRegisterResource, "/register")
 
     api.init_app(app=app)
