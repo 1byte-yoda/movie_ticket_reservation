@@ -56,15 +56,15 @@ class SeatReservationModel(db.Model):
     @classmethod
     def _is_valid_representation(cls, *, data: dict) -> bool:
         """Check validity of dictionary keys as representation of this model."""
-        base = {"seat_id", "reservation_id", "movie_screen_id"}
+        base = {"seat_id", "movie_screen_id"}
         return True if set(base) == set(data) else False
 
     @classmethod
-    def find(cls, *, unique_reservation: dict) -> "SeatReservationModel":
+    def find(cls, *, data: dict) -> "SeatReservationModel":
         """Docstring here."""
-        if not cls._is_valid_representation(data=unique_reservation):
+        if not cls._is_valid_representation(data=data):
             return {"message": "Invalid request."}, 400
-        temp_reservation = cls.query.filter_by(**unique_reservation).first()
+        temp_reservation = cls.query.filter_by(**data).first()
         return temp_reservation
 
     def save_to_db(self):
@@ -77,3 +77,17 @@ class SeatReservationModel(db.Model):
         """Docstring here."""
         db.session.add_all(seat_reservations)
         db.session.commit()
+
+
+class SeatReservationListModel(SeatReservationModel):
+    """Docstring here."""
+
+    @classmethod
+    def find_taken_seats(cls, *, movie_screen_id: int, seat_id_list: list) -> list:
+        # https://docs.sqlalchemy.org/en/13/orm/tutorial.html#querying
+        return cls.query.filter_by(movie_screen_id=movie_screen_id)\
+                        .filter(cls.seat_id.in_(seat_id_list)).all()
+
+    @classmethod
+    def find_all(cls) -> list:
+        return cls.query.all()

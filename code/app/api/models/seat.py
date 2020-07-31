@@ -25,3 +25,12 @@ class SeatModel(db.Model):
     def find_by_id(cls, id_: int) -> "SeatModel":
         """Docstring here."""
         return cls.query.filter_by(id=id_).first()
+
+
+class SeatListModel(SeatModel):
+    """Docstring here."""
+
+    @classmethod
+    def find_existing(cls, *, seat_id_list: list) -> list:
+        seat_list = cls.query.filter(SeatModel.id.in_(seat_id_list)).all()
+        return seat_list

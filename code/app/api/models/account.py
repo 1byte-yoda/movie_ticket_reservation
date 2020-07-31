@@ -33,7 +33,7 @@ class AccountModel(db.Model):
         self.created_at = None
         self.updated_at = None
 
-    def json(self):
+    def json(self) -> dict:
         """JSON representation of the account model."""
         return {"id": self.id, "email": self.email,
                 "password": self.password, "type": self.type,
@@ -41,13 +41,13 @@ class AccountModel(db.Model):
                 "updated_at": self.updated_at.strftime("%Y-%m-%d %H:%M:%S")}
 
     @classmethod
-    def find_by_email(cls, *, email):
+    def find_by_email(cls, *, email: str) -> "AccountModel":
         """Docstring here."""
         account = cls.query.filter_by(email=email).first()
         return account
 
     @classmethod
-    def find_by_id(cls, *, _id):
+    def find_by_id(cls, *, _id: int) -> "AccountModel":
         """Docstring here."""
         account = cls.query.filter_by(id=_id).first()
         return account
