@@ -15,7 +15,7 @@ class SeatModel(db.Model):
                            onupdate=datetime.now)
 
     screen_id = db.Column(db.Integer, db.ForeignKey("screen.id"))
-    screen = db.relationship(ScreenModel, backref="screen", lazy=True)
+    screen = db.relationship(ScreenModel, backref="screen", lazy="select")
 
     def __init__(self, id=None, screen_id=None):
         self.id = id
@@ -31,6 +31,8 @@ class SeatListModel(SeatModel):
     """Docstring here."""
 
     @classmethod
-    def find_existing(cls, *, seat_id_list: list) -> list:
-        seat_list = cls.query.filter(SeatModel.id.in_(seat_id_list)).all()
-        return seat_list
+    def find_existing(cls, *, screen_id, seat_id_list: list) -> list:
+        seat_list = cls.query.with_entities(cls.id)\
+                             .filter(SeatModel.screen_id == screen_id)\
+                             .filter(SeatModel.id.in_(seat_id_list)).all()
+        return list(*zip(*seat_list))

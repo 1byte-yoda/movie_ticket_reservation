@@ -83,11 +83,16 @@ class SeatReservationListModel(SeatReservationModel):
     """Docstring here."""
 
     @classmethod
-    def find_taken_seats(cls, *, movie_screen_id: int, seat_id_list: list) -> list:
-        # https://docs.sqlalchemy.org/en/13/orm/tutorial.html#querying
-        return cls.query.filter_by(movie_screen_id=movie_screen_id)\
-                        .filter(cls.seat_id.in_(seat_id_list)).all()
+    def find_all(cls) -> list:
+        """Query all of the seat_reservation table rows."""
+        return cls.query.all()
 
     @classmethod
-    def find_all(cls) -> list:
-        return cls.query.all()
+    def which_occupied(cls, *, seat_id_list: list, movie_screen: object) -> list:
+        """Query the database for occupied seats in a given movie_screen."""
+        seats = (cls.query.join(MovieScreenModel)
+                          .filter(movie_screen.id == cls.movie_screen_id)
+                          .filter(cls.seat_id.in_(seat_id_list))
+                          .with_entities("seat_reservation.seat_id")
+                          .all())
+        return list(*zip(*seats))

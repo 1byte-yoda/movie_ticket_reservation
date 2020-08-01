@@ -1,5 +1,3 @@
-# from datetime import datetime as dt
-
 import simplejson
 from flask import request
 from flask_restful import Resource
@@ -9,13 +7,10 @@ from werkzeug.security import safe_str_cmp
 from ..models.seat_reservation import (
     SeatReservationModel, SeatReservationListModel
 )
-from ..models.seat import SeatListModel
 from ..models.parsers import SeatReservationParser
-from ..models.movie import MovieModel
 from ..models.movie_screen import MovieScreenModel
 from ..models.payment import PaymentModel
 from ..models.reservation import ReservationModel
-# from ...utils import deserialize_datetime
 
 
 class SeatReservationResource(Resource):
@@ -42,50 +37,46 @@ class SeatReservationResource(Resource):
         """Create a reservation."""
         expected_args = {
             # Get these from frontend
-            "screen_id": int, "movie_id": int, "seat_id_list": list
+            "screen_id": int, "movie_id": int,
+            "seat_id_list": list, "schedule_id": int
         }
         data = SeatReservationParser.parse_expected_input(dict_=expected_args)
         # Duplicate Handler will be implemented in frontend as well,
-        # eg. showing only available seats for a particular screen
+        # eg. show only available seats for a particular screen
 
         # Account
         account = current_identity
 
-        # Movie
-        movie_screen_query = {
-            "screen_id": data["screen_id"],
-            "movie_id": data["movie_id"]
-        }
-        movie_screen = MovieScreenModel.find(data=movie_screen_query)
+        # Movie Screen
+        screen_id = data["screen_id"]
+        movie_id = data["movie_id"]
+        schedule_id = data["schedule_id"]
+        movie_screen = MovieScreenModel.find(screen_id=screen_id, movie_id=movie_id,
+                                             schedule_id=schedule_id)
         if not movie_screen:
             return ({
-                "message": "Movie-Screen combination not found.",
-                "payload": movie_screen_query
+                "message": "movie-screen-schedule combination not found.",
+                "payload": {"screen_id": screen_id, "movie_id": movie_id,
+                            "schedule_id": schedule_id}
             }, 404)
-        movie = MovieModel.find_by_id(id_=data["movie_id"])
-        movie_price = movie.price
+        max_screen_capacity = movie_screen.screen.capacity
 
         # Seats
         seat_id_list = data["seat_id_list"]
-        existing_seats = SeatListModel.find_existing(seat_id_list=seat_id_list)
-        invalid_seats = [seat for seat in seat_id_list if seat not in existing_seats]
-
-        if invalid_seats:
-            return ({
-                "message": f"Seat IDs: {invalid_seats} does not exists."
-            }, 404)
-        seat_reservation_query = {"movie_screen_id": movie_screen.id,
-                                  "seat_id_list": seat_id_list}
-        taken_seats = SeatReservationListModel.find_taken_seats(**seat_reservation_query)
-        taken_seats = [seat_reservation.seat_id for seat_reservation in taken_seats]
-
-        if taken_seats:
-            return ({
-                "message": f"Invalid request. Seat IDs: {taken_seats} already reserved."
-            }, 400)
+        largest_seat_id = max(seat_id_list)
+        if largest_seat_id > max_screen_capacity:
+            return ({"message": "Seat(s) not found."}, 404)
+        occupied_seats = SeatReservationListModel.which_occupied(
+            seat_id_list=seat_id_list,
+            movie_screen=movie_screen,
+        )
+        is_occupied_seats = any(seat_id in occupied_seats for seat_id in seat_id_list)
+        if is_occupied_seats:
+            return ({"message": "Seat(s) Occupied"}, 400)
 
         # Payment
         head_count = len(seat_id_list)
+        movie_price = movie_screen.movie.price
         total_price = movie_price * head_count
         payment = PaymentModel(token_id="some-random-token-that-i-created.",
                                total_price=total_price, type="paymaya")
@@ -103,8 +94,17 @@ class SeatReservationResource(Resource):
                                                     movie_screen=movie_screen)
             seat_reservation_list.append(seat_reservation)
         SeatReservationModel.save_all(seat_reservations=seat_reservation_list)
+        payload = {
+            "reservation_id": reservation.id,
+            "cinema_name": movie_screen.screen.cinema.name,
+            "screen_id": screen_id,
+            "movie_name": movie_screen.movie.name,
+            "seat_id_list": seat_id_list,
+            "price_breakdown": f"{float(movie_price)} x {head_count}",
+            "total_price": float(total_price)
+        }
         return {"message": "Reservation created successfully.",
-                "payload": data}, 201
+                "payload": payload}, 201
 
     @jwt_required()
     def put(self):

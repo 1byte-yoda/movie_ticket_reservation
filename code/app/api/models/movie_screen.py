@@ -17,9 +17,10 @@ class MovieScreenModel(db.Model):
                            onupdate=datetime.now)
 
     movie_id = db.Column(db.Integer, db.ForeignKey("movie.id"))
-    movie = db.relationship(MovieModel, backref="movie", lazy=True)
+    movie = db.relationship(MovieModel, backref="movie", lazy="joined", join_depth=1)
     screen_id = db.Column(db.Integer, db.ForeignKey("screen.id"))
-    screen = db.relationship(ScreenModel, backref="screen_movie_screen_model", lazy=True)
+    screen = db.relationship(ScreenModel, backref="screen_movie_screen_model",
+                             lazy="joined", join_depth=1)
     schedule_id = db.Column(db.Integer, db.ForeignKey("schedule.id"))
     schedule = db.relationship(ScheduleModel, backref="schedule", lazy=True)
 
@@ -30,20 +31,13 @@ class MovieScreenModel(db.Model):
         self.schedule = schedule
 
     def __repr__(self) -> str:
-        """Str representation of the seat reservation model."""
-        return ("<SeatReservationModel {}, {}>".format(self.movie,
+        """Printable representation of the seat reservation model."""
+        return ("<MovieScreenModel {}, {}>".format(self.movie,
                 self.screen))
 
     @classmethod
-    def _is_valid_representation(cls, *, data: dict) -> bool:
-        """Check validity of dictionary keys as representation of this model."""
-        base = {"screen_id", "movie_id"}
-        return True if set(base) == set(data) else False
-
-    @classmethod
-    def find(cls, *, data: dict) -> "MovieScreenModel":
+    def find(cls, *, screen_id: int, movie_id: int, schedule_id: int) -> "MovieScreenModel":
         """Docstring here."""
-        if not cls._is_valid_representation(data=data):
-            return {"message": "Invalid request."}, 400
-        movie_screen = cls.query.filter_by(**data).first()
-        return movie_screen
+        movie_screen = cls.query.filter_by(schedule_id=schedule_id, screen_id=screen_id,
+                                           movie_id=movie_id)
+        return movie_screen.first()
