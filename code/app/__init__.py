@@ -11,24 +11,22 @@ from .api.resources.seat_reservation import (
 from .authenticate import jwt
 from .routes import SEAT_RESERVATION_LIST_ROUTES, SEAT_RESERVATION_ROUTES
 from db import db
+from app.config import config
+
 
 api = Api()
 
 
-def create_app(*, config_name=""):
+def create_app(*, config_name="default") -> Flask:
     """Create a Flask application."""
     app = Flask(__name__)
-    app.secret_key = "change_this_later_bro"
-
-    app.config["JWT_EXPIRATION_DELTA"] = timedelta(seconds=3600)
-    app.config["JWT_AUTH_USERNAME_KEY"] = "email"
-    app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://root:123456@localhost/anonymouse"
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config.from_object(config[config_name])
 
     api.add_resource(SeatReservationResource, *SEAT_RESERVATION_ROUTES)
     api.add_resource(SeatReservationListResource, *SEAT_RESERVATION_LIST_ROUTES)
     api.add_resource(AccountRegisterResource, "/register")
 
+    config[config_name].init_app(app=app)
     api.init_app(app=app)
     jwt.init_app(app=app)
     db.init_app(app=app)

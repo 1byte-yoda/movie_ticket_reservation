@@ -56,3 +56,8 @@ class AccountModel(db.Model):
         """Docstring here."""
         db.session.add(self)
         db.session.commit()
+
+    def remove_from_db(self):
+        """Remove an account from the database."""
+        db.session.delete(self)
+        db.session.commit()

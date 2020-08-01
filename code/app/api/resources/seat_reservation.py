@@ -90,8 +90,8 @@ class SeatReservationResource(Resource):
         for seat_id in seat_id_list:
             seat_reservation = SeatReservationModel(price=movie_price,
                                                     seat_id=seat_id,
-                                                    reservation=reservation,
-                                                    movie_screen=movie_screen)
+                                                    reservation_id=reservation.id,
+                                                    movie_screen_id=movie_screen.id)
             seat_reservation_list.append(seat_reservation)
         SeatReservationModel.save_all(seat_reservations=seat_reservation_list)
         payload = {
