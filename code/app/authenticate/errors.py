@@ -1,8 +1,7 @@
 from flask import jsonify
-from . import jwt
 
 
-@jwt.jwt_error_handler
+# @jwt._set_error_handler_callbacks
 def customized_jwt_error_handler(error):
     """Error handler when a JWT error occured."""
     return jsonify({

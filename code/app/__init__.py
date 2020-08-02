@@ -1,10 +1,9 @@
 """Flask Application Factory."""
 
-from datetime import timedelta
 from flask import Flask
 from flask_restful import Api
 
-from .api.resources.account import AccountRegisterResource
+from .api.resources.account import AccountRegisterResource, AccountLoginResource
 from .api.resources.seat_reservation import (
     SeatReservationResource, SeatReservationListResource
 )
@@ -25,6 +24,7 @@ def create_app(*, config_name="default") -> Flask:
     api.add_resource(SeatReservationResource, *SEAT_RESERVATION_ROUTES)
     api.add_resource(SeatReservationListResource, *SEAT_RESERVATION_LIST_ROUTES)
     api.add_resource(AccountRegisterResource, "/register")
+    api.add_resource(AccountLoginResource, "/login")
 
     config[config_name].init_app(app=app)
     api.init_app(app=app)

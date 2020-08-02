@@ -1,7 +1,7 @@
 from flask_restful.reqparse import RequestParser
 
 
-class SeatReservationParser:
+class BaseParser:
     """Input parser for seat reservation."""
 
     @classmethod

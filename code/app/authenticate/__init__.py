@@ -1,10 +1,25 @@
 """JWT Authentication."""
+from flask_jwt_extended import JWTManager
 
-from flask_jwt import JWT
+from..api.models.account import AccountModel
 
-from .security import authenticate, identity
 
-jwt = JWT(authentication_handler=authenticate,
-          identity_handler=identity)
+jwt = JWTManager()
 
-from . import errors
+
+@jwt.user_claims_loader
+def add_claims_to_access_token(account):
+    """Add claims that we can use when we log in."""
+    return {"type": account.type.value}
+
+
+@jwt.user_identity_loader
+def user_identity_lookup(account):
+    """Add identity for creating jwt access token."""
+    return account.id
+
+
+@jwt.user_loader_callback_loader
+def user_loader_callback(identity):
+    """Add the current Account Object to the current session."""
+    return AccountModel.find_by_id(_id=identity)

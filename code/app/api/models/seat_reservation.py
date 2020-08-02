@@ -73,7 +73,7 @@ class SeatReservationModel(db.Model):
             return {"message": "An unknown error occured"}, 500
         if temp_reservation:
             temp_reservation = simplejson.dumps(temp_reservation.json())
-            temp_reservation = simplejson.loads(temp_reservation.json())
+            temp_reservation = simplejson.loads(temp_reservation)
         return temp_reservation
 
     def save_to_db(self):

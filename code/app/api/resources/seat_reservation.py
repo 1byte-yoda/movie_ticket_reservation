@@ -1,13 +1,13 @@
 import simplejson
 from flask import request
 from flask_restful import Resource
-from flask_jwt import jwt_required, current_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt_claims, get_raw_jwt, get_current_user
 from werkzeug.security import safe_str_cmp
 
 from ..models.seat_reservation import (
     SeatReservationModel, SeatReservationListModel
 )
-from ..models.parsers import SeatReservationParser
+from ..models.parsers import BaseParser
 from ..models.movie_screen import MovieScreenModel
 from ..models.payment import PaymentModel
 from ..models.reservation import ReservationModel
@@ -16,21 +16,22 @@ from ..models.reservation import ReservationModel
 class SeatReservationResource(Resource):
     """Docstring here."""
 
-    @jwt_required()
+    @jwt_required
     def get(self):
         """Get a seat reservation by unique_reservation."""
         expected_args = {
             "seat_id": int, "movie_screen_id": int
         }
-        data = SeatReservationParser.parse_expected_input(dict_=expected_args)
-        if safe_str_cmp(current_identity.type.value, "admin"):
+        data = BaseParser.parse_expected_input(dict_=expected_args)
+        claims = get_jwt_claims()
+        if safe_str_cmp(claims.get("type"), "admin"):
             seat_reservation = SeatReservationModel.find(data=data)
             return ((seat_reservation, 200)
                     if seat_reservation
                     else ({"message": "Reservation not found."}, 404))
         return {"message": "Invalid Request."}, 401
 
-    @jwt_required()
+    @jwt_required
     def post(self):
         """Create a reservation."""
         expected_args = {
@@ -38,12 +39,12 @@ class SeatReservationResource(Resource):
             "screen_id": int, "movie_id": int,
             "seat_id_list": list, "schedule_id": int
         }
-        data = SeatReservationParser.parse_expected_input(dict_=expected_args)
+        data = BaseParser.parse_expected_input(dict_=expected_args)
         # Duplicate Handler will be implemented in frontend as well,
         # eg. show only available seats for a particular screen
 
         # Account
-        account = current_identity
+        account = get_current_user()
 
         # Movie Screen
         screen_id = data["screen_id"]
@@ -95,7 +96,7 @@ class SeatReservationResource(Resource):
         return {"message": "Reservation created successfully.",
                 "ticket": reservation.generate_json_ticket()}, 201
 
-    @jwt_required()
+    @jwt_required
     def put(self):
         """Modify a reservation."""
         # Upsert
@@ -110,10 +111,12 @@ class SeatReservationResource(Resource):
 class SeatReservationListResource(Resource):
     """Docstring here."""
 
-    @jwt_required()
+    @jwt_required
     def get(self):
         """Get all of reservations in our system."""
-        if safe_str_cmp(current_identity.type.value, "admin"):
+        print(get_current_user())
+        claims = get_jwt_claims()
+        if safe_str_cmp(claims.get("type"), "admin"):
             reservations = SeatReservationListModel.find_all()
             reservations = (reservation.json() for reservation in reservations)
             reservations = simplejson.dumps({"reservations": list(reservations)})
