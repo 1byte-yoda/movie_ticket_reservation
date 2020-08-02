@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from db import db
+from .master_schedule import MasterScheduleModel
 
 
 class ScheduleModel(db.Model):
@@ -14,3 +15,5 @@ class ScheduleModel(db.Model):
                            onupdate=datetime.now)
     play_datetime = db.Column(db.DateTime)
     end_datetime = db.Column(db.DateTime)
+    master_schedule_id = db.Column(db.Integer, db.ForeignKey("master_schedule.id"))
+    master_schedule = db.relationship(MasterScheduleModel, backref="master_schedule")

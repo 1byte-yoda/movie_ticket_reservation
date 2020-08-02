@@ -24,9 +24,7 @@ class SeatReservationResource(Resource):
         }
         data = SeatReservationParser.parse_expected_input(dict_=expected_args)
         if safe_str_cmp(current_identity.type.value, "admin"):
-            seat_reservation = SeatReservationModel.find(data=data).json()
-            seat_reservation = simplejson.dumps(seat_reservation)
-            seat_reservation = simplejson.loads(seat_reservation)
+            seat_reservation = SeatReservationModel.find(data=data)
             return ((seat_reservation, 200)
                     if seat_reservation
                     else ({"message": "Reservation not found."}, 404))
@@ -90,21 +88,12 @@ class SeatReservationResource(Resource):
         for seat_id in seat_id_list:
             seat_reservation = SeatReservationModel(price=movie_price,
                                                     seat_id=seat_id,
-                                                    reservation_id=reservation.id,
-                                                    movie_screen_id=movie_screen.id)
+                                                    reservation=reservation,
+                                                    movie_screen=movie_screen)
             seat_reservation_list.append(seat_reservation)
         SeatReservationModel.save_all(seat_reservations=seat_reservation_list)
-        payload = {
-            "reservation_id": reservation.id,
-            "cinema_name": movie_screen.screen.cinema.name,
-            "screen_id": screen_id,
-            "movie_name": movie_screen.movie.name,
-            "seat_id_list": seat_id_list,
-            "price_breakdown": f"{float(movie_price)} x {head_count}",
-            "total_price": float(total_price)
-        }
         return {"message": "Reservation created successfully.",
-                "payload": payload}, 201
+                "ticket": reservation.generate_json_ticket()}, 201
 
     @jwt_required()
     def put(self):

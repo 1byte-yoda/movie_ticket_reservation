@@ -38,6 +38,9 @@ class MovieScreenModel(db.Model):
     @classmethod
     def find(cls, *, screen_id: int, movie_id: int, schedule_id: int) -> "MovieScreenModel":
         """Docstring here."""
-        movie_screen = cls.query.filter_by(schedule_id=schedule_id, screen_id=screen_id,
-                                           movie_id=movie_id)
+        try:
+            movie_screen = cls.query.filter_by(schedule_id=schedule_id, screen_id=screen_id,
+                                            movie_id=movie_id)
+        except Exception as e:
+            return {"message": "An unknown error occured"}, 500
         return movie_screen.first()
