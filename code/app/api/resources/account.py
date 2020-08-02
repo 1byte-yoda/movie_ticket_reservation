@@ -1,7 +1,13 @@
-from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_jwt_extended import (
+    create_access_token,
+    create_refresh_token,
+    get_raw_jwt
+)
 from flask_restful import Resource
+from flask_jwt_extended import jwt_required
 from werkzeug.security import safe_str_cmp
 
+from ...authenticate.blacklist import BLACK_LIST
 from ..models.account import AccountModel
 from ..models.parsers import BaseParser
 
@@ -39,3 +45,13 @@ class AccountLoginResource(Resource):
                 "refresh_token": refresh_token
             }, 200
         return {"message": "Invalid Credentials"}, 401
+
+
+class AccountLogoutResource(Resource):
+    """Docstring here."""
+
+    @jwt_required
+    def post(cls):
+        jti = get_raw_jwt()["jti"]
+        BLACK_LIST.add(jti)
+        return {"message": "Logged out successfully."}, 201

@@ -1,11 +1,16 @@
 import simplejson
 from flask import request
 from flask_restful import Resource
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt_claims, get_raw_jwt, get_current_user
+from flask_jwt_extended import (
+    jwt_required,
+    get_jwt_claims,
+    get_current_user
+)
 from werkzeug.security import safe_str_cmp
 
 from ..models.seat_reservation import (
-    SeatReservationModel, SeatReservationListModel
+    SeatReservationModel,
+    SeatReservationListModel
 )
 from ..models.parsers import BaseParser
 from ..models.movie_screen import MovieScreenModel
@@ -99,13 +104,7 @@ class SeatReservationResource(Resource):
     @jwt_required
     def put(self):
         """Modify a reservation."""
-        # Upsert
-        if request.path == "/reservation/update":
-            pass
-
-        # Cancel
-        elif request.path == "/reservation/cancel":
-            pass
+        pass
 
 
 class SeatReservationListResource(Resource):
@@ -114,7 +113,6 @@ class SeatReservationListResource(Resource):
     @jwt_required
     def get(self):
         """Get all of reservations in our system."""
-        print(get_current_user())
         claims = get_jwt_claims()
         if safe_str_cmp(claims.get("type"), "admin"):
             reservations = SeatReservationListModel.find_all()

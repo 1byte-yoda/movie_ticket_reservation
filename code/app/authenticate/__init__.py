@@ -2,6 +2,7 @@
 from flask_jwt_extended import JWTManager
 
 from..api.models.account import AccountModel
+from .blacklist import BLACK_LIST
 
 
 jwt = JWTManager()
@@ -23,3 +24,9 @@ def user_identity_lookup(account):
 def user_loader_callback(identity):
     """Add the current Account Object to the current session."""
     return AccountModel.find_by_id(_id=identity)
+
+
+@jwt.token_in_blacklist_loader
+def check_blacklist_token(decrypted_token):
+    """Check for blacklisted tokens. Will be used to implement logout endpoint."""
+    return decrypted_token["jti"] in BLACK_LIST
