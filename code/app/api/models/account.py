@@ -23,9 +23,9 @@ class AccountModel(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
     type = db.Column(db.String(10))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        db.DateTime, default=datetime.utcnow, onupdate=datetime.now
     )
 
     @classmethod
@@ -52,7 +52,7 @@ class AccountModel(db.Model):
 
     def update(self, update_data: dict):
         """Update an account in the database."""
-        self.email = update_data["email"]
-        self.password = update_data["password"]
-        db.session.add(self)
+        (db.session.query(AccountModel)
+                   .filter_by(id=self.id)
+                   .update(update_data))
         db.session.commit()
