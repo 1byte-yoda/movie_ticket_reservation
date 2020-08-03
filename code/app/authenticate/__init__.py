@@ -1,7 +1,7 @@
 """JWT Authentication."""
 from flask_jwt_extended import JWTManager
 
-from..api.models.account import AccountModel
+from ..api.models.account import AccountModel
 from .blacklist import BLACK_LIST
 
 

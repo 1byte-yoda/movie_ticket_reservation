@@ -9,11 +9,13 @@ class Config:
     SECRET_KEY = "change_this_later_bro"
     JWT_EXPIRATION_DELTA = timedelta(seconds=3600)
     JWT_AUTH_USERNAME_KEY = "email"
+    JWT_BLACKLIST_ENABLED = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     @staticmethod
     def init_app(app):
         pass
+
 
 class DevelopmentConfig(Config):
     DEBUG = True
@@ -28,13 +30,14 @@ class TestingConfig(Config):
 
 
 class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join('data.sqlite')
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "DATABASE_URL"
+    ) or "sqlite:///" + os.path.join("data.sqlite")
 
 
 config = {
-    'development': DevelopmentConfig,
-    'testing': TestingConfig,
-    'production': ProductionConfig,
-    'default': DevelopmentConfig
+    "development": DevelopmentConfig,
+    "testing": TestingConfig,
+    "production": ProductionConfig,
+    "default": DevelopmentConfig,
 }

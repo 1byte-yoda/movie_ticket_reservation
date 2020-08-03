@@ -12,5 +12,4 @@ class MasterScheduleModel(db.Model):
     launch_datetime = db.Column(db.DateTime)
     phase_out_datetime = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.now)
-    updated_at = db.Column(db.DateTime, default=datetime.now,
-                           onupdate=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)

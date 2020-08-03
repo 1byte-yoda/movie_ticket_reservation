@@ -20,13 +20,12 @@ class PaymentModel(db.Model):
     total_price = db.Column(db.Float(8, 2))
     type = db.Column(db.Enum(PaymentTypeEnum))
     created_at = db.Column(db.DateTime, default=datetime.now)
-    updated_at = db.Column(db.DateTime, default=datetime.now,
-                           onupdate=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
     def __init__(self, token_id, total_price, type, id=None):
         self.id = id
         self.token_id = token_id
-        self.total_price = total_price,
+        self.total_price = (total_price,)
         self.type = type
 
     def save_to_db(self):

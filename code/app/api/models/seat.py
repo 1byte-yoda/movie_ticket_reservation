@@ -11,8 +11,7 @@ class SeatModel(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
-    updated_at = db.Column(db.DateTime, default=datetime.now,
-                           onupdate=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
     screen_id = db.Column(db.Integer, db.ForeignKey("screen.id"))
     screen = db.relationship(ScreenModel, backref="screen", lazy="select")
@@ -32,7 +31,10 @@ class SeatListModel(SeatModel):
 
     @classmethod
     def find_existing(cls, *, screen_id, seat_id_list: list) -> list:
-        seat_list = cls.query.with_entities(cls.id)\
-                             .filter(SeatModel.screen_id == screen_id)\
-                             .filter(SeatModel.id.in_(seat_id_list)).all()
+        seat_list = (
+            cls.query.with_entities(cls.id)
+            .filter(SeatModel.screen_id == screen_id)
+            .filter(SeatModel.id.in_(seat_id_list))
+            .all()
+        )
         return list(*zip(*seat_list))

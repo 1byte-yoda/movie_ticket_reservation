@@ -14,8 +14,7 @@ class MovieModel(db.Model):
     description = db.Column(db.Text)
     rating = db.Column(db.Float(2, 1))
     created_at = db.Column(db.DateTime, default=datetime.now)
-    updated_at = db.Column(db.DateTime, default=datetime.now,
-                           onupdate=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
     def __init__(self, id, name, price, description, rating):
         self.id = id

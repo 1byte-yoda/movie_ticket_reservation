@@ -15,8 +15,7 @@ class MovieRatingModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     rating = db.Column(TINYINT)
     created_at = db.Column(db.DateTime, default=datetime.now)
-    updated_at = db.Column(db.DateTime, default=datetime.now,
-                           onupdate=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
     payment_id = db.Column(db.Integer, db.ForeignKey("payment.id"))
     payment = db.relationship(PaymentModel, backref="payment", uselist=False)

@@ -7,7 +7,7 @@ from db import db
 class AccountTypeEnum(enum.Enum):
     """Account type for SQLAlchemy Data Type."""
 
-    user = "regular"
+    regular = "regular"
     admin = "admin"
 
 
@@ -21,8 +21,9 @@ class AccountModel(db.Model):
     password = db.Column(db.String(120), nullable=False)
     type = db.Column(db.Enum(AccountTypeEnum))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow,
-                           onupdate=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
 
     def __init__(self, *, id=None, email="", password="", type=""):
         """Docstring here."""
@@ -35,10 +36,14 @@ class AccountModel(db.Model):
 
     def json(self) -> dict:
         """JSON representation of the account model."""
-        return {"id": self.id, "email": self.email,
-                "password": self.password, "type": self.type,
-                "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                "updated_at": self.updated_at.strftime("%Y-%m-%d %H:%M:%S")}
+        return {
+            "id": self.id,
+            "email": self.email,
+            "password": self.password,
+            "type": self.type,
+            "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "updated_at": self.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
+        }
 
     @classmethod
     def find_by_email(cls, *, email: str) -> "AccountModel":

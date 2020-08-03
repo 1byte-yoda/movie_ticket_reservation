@@ -17,8 +17,7 @@ class LocationModel(db.Model):
     longitude = db.Column(CHAR(30))
     latitude = db.Column(CHAR(30))
     created_at = db.Column(db.DateTime, default=datetime.now)
-    updated_at = db.Column(db.DateTime, default=datetime.now,
-                           onupdate=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
     def __init__(self):
         pass

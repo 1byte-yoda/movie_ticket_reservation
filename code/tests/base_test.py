@@ -12,6 +12,7 @@ from db import db
 
 app = create_app(config_name="testing")
 
+
 class BaseTest(TestCase):
     def setUp(self):
         with app.app_context():

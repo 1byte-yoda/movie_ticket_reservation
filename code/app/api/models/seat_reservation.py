@@ -7,6 +7,7 @@ from .seat import SeatModel
 from .reservation import ReservationModel
 from .movie_screen import MovieScreenModel
 from ...utils import deserialize_datetime
+from .response_messages import INVALID_REQUEST_MESSAGE_400, UNKNOWN_ERROR_MESSAGE_500
 
 
 class SeatReservationModel(db.Model):
@@ -17,8 +18,7 @@ class SeatReservationModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     price = db.Column(db.Float(6, 2))
     created_at = db.Column(db.DateTime, default=datetime.now)
-    updated_at = db.Column(db.DateTime, default=datetime.now,
-                           onupdate=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
     seat_id = db.Column(db.Integer, db.ForeignKey("seat.id"))
     seats = db.relationship(SeatModel, backref="seats")
@@ -28,8 +28,9 @@ class SeatReservationModel(db.Model):
     movie_screen = db.relationship(MovieScreenModel, backref="movie_screen")
     promo_id = db.Column(db.Integer)
 
-    def __init__(self, price, seat_id, reservation,
-                 movie_screen, promo_id=None, id=None):
+    def __init__(
+        self, price, seat_id, reservation, movie_screen, promo_id=None, id=None
+    ):
         """Docstring here."""
         self.id = id
         self.price = price
@@ -42,18 +43,22 @@ class SeatReservationModel(db.Model):
 
     def __repr__(self) -> str:
         """Str representation of the seat reservation model."""
-        return (f"<SeatReservationModel seat={self.seat_id},"
-                "reservation={self.reservation_id},"
-                "movie_screen={self.movie_screen_id}>")
+        return (
+            f"<SeatReservationModel seat={self.seat_id},"
+            "reservation={self.reservation_id},"
+            "movie_screen={self.movie_screen_id}>"
+        )
 
     def json(self) -> dict:
         """JSON representation of the seat reservation model."""
         return {
-            "id": self.id, "price": self.price,
+            "id": self.id,
+            "price": self.price,
             "created_at": deserialize_datetime(self.created_at),
             "updated_at": deserialize_datetime(self.updated_at),
-            "seat_id": self.seat_id, "reservation_id": self.reservation_id,
-            "movie_screen_id": self.movie_screen_id
+            "seat_id": self.seat_id,
+            "reservation_id": self.reservation_id,
+            "movie_screen_id": self.movie_screen_id,
         }
 
     @classmethod
@@ -66,11 +71,11 @@ class SeatReservationModel(db.Model):
     def find(cls, *, data: dict) -> "SeatReservationModel":
         """Docstring here."""
         if not cls._is_valid_representation(data=data):
-            return {"message": "Invalid request."}, 400
+            return {"message": INVALID_REQUEST_MESSAGE_400}, 400
         try:
             temp_reservation = cls.query.filter_by(**data).first()
         except Exception as e:
-            return {"message": "An unknown error occured"}, 500
+            return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
         if temp_reservation:
             temp_reservation = simplejson.dumps(temp_reservation.json())
             temp_reservation = simplejson.loads(temp_reservation)
@@ -84,7 +89,7 @@ class SeatReservationModel(db.Model):
         except Exception as e:
             db.session.rollback()
             db.session.flush()
-            return {"message": "An unknown error occured"}, 500
+            return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
 
     @classmethod
     def save_all(cls, *, seat_reservations: list):
@@ -95,7 +100,7 @@ class SeatReservationModel(db.Model):
         except Exception as e:
             db.session.rollback()
             db.session.flush()
-            return {"message": "An unknown error occured"}, 500
+            return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
 
 
 class SeatReservationListModel(SeatReservationModel):
@@ -110,13 +115,15 @@ class SeatReservationListModel(SeatReservationModel):
     def which_occupied(cls, *, seat_id_list: list, movie_screen: object) -> list:
         """Query the database for occupied seats in a given movie_screen."""
         try:
-            seats = (cls.query.join(MovieScreenModel)
-                        .filter(movie_screen.id == cls.movie_screen_id)
-                        .filter(cls.seat_id.in_(seat_id_list))
-                        .with_entities("seat_reservation.movie_screen_id")
-                        .all())
+            seats = (
+                cls.query.join(MovieScreenModel)
+                .filter(movie_screen.id == cls.movie_screen_id)
+                .filter(cls.seat_id.in_(seat_id_list))
+                .with_entities("seat_reservation.movie_screen_id")
+                .all()
+            )
         except Exception as e:
             db.session.rollback()
             db.session.flush()
-            return {"message": "An unknown error occured"}, 500
+            return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
         return list(*zip(*seats))
