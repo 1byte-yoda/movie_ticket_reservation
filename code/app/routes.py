@@ -7,6 +7,8 @@ SEAT_RESERVATION_ROUTES = [
 
 SEAT_RESERVATION_LIST_ROUTES = ["/seat-reservations"]
 
+ACCOUNT_ROUTES = ["/account"]
+
 ACCOUNT_REGISTER_ROUTES = ["/register"]
 
 ACCOUNT_LOGIN_ROUTES = ["/login"]

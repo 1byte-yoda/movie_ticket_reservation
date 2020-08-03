@@ -1,33 +1,56 @@
-from flask_jwt_extended import create_access_token, create_refresh_token, get_raw_jwt
+from flask_jwt_extended import (
+    create_access_token,
+    create_refresh_token,
+    jwt_required,
+    jwt_optional,
+    get_raw_jwt,
+    get_jwt_claims,
+    get_jwt_identity,
+)
 from flask_restful import Resource
-from flask_jwt_extended import jwt_required
+from flask import request
 from werkzeug.security import safe_str_cmp
+from marshmallow.exceptions import ValidationError
 
 from ...authenticate.blacklist import BLACK_LIST
 from ..models.account import AccountModel
-from ..models.parsers import BaseParser
 from .response_messages import (
     ACCOUNT_EXISTS_MESSAGE_400,
+    ACCOUNT_NOT_FOUND_MESSAGE_404,
     INVALID_ACCOUNT_MESSAGE_401,
     ACCOUNT_CREATED_MESSAGE_201,
     ACCOUNT_LOGGED_OUT_MESSAGE_201,
+    INVALID_REQUEST_ADMIN_MESSAGE_401,
+    INVALID_ALREADY_LOGIN_400,
 )
-
-
-REGISTER_EXPECTED_INPUT = {"email": str, "password": str, "type": str}
-LOGIN_EXPECTED_INPUT = {"email": str, "password": str}
+from ..schemas.account import AccountSchema
 
 
 class AccountRegisterResource(Resource):
     """Docstring Here."""
 
-    def post(self):
-        """Docstring Here."""
-        data = BaseParser.parse_expected_input(dict_=REGISTER_EXPECTED_INPUT)
-        if AccountModel.find_by_email(email=data["email"]):
-            return {"message": ACCOUNT_EXISTS_MESSAGE_400}, 400
+    account_schema = AccountSchema()
 
-        new_account = AccountModel(**data)
+    @classmethod
+    @jwt_optional
+    def post(cls):
+        """Docstring Here."""
+        is_logged_in = get_jwt_identity()
+        if is_logged_in:
+            return (
+                {
+                    "message": INVALID_ALREADY_LOGIN_400,
+                    "login": True
+                }, 400
+            )
+        account_data = request.get_json()
+        try:
+            account = cls.account_schema.load(account_data)
+        except ValidationError as err:
+            return {"message": err.messages}
+        if AccountModel.find_by_email(email=account["email"]):
+            return {"message": ACCOUNT_EXISTS_MESSAGE_400}, 400
+        new_account = AccountModel(**account)
         new_account.register()
         return {"message": ACCOUNT_CREATED_MESSAGE_201}, 201
 
@@ -35,22 +58,66 @@ class AccountRegisterResource(Resource):
 class AccountLoginResource(Resource):
     """Docstring here."""
 
+    account_schema = AccountSchema()
+
     @classmethod
+    @jwt_optional
     def post(cls):
-        data = BaseParser.parse_expected_input(dict_=LOGIN_EXPECTED_INPUT)
-        email = AccountModel.find_by_email(email=data["email"])
-        if email and safe_str_cmp(email.password, data["password"]):
-            access_token = create_access_token(identity=email, fresh=True)
-            refresh_token = create_refresh_token(identity=email)
-            return {"access_token": access_token, "refresh_token": refresh_token}, 200
+        is_logged_in = get_jwt_identity()
+        if is_logged_in:
+            return (
+                {
+                    "message": INVALID_ALREADY_LOGIN_400,
+                    "login": True
+                }, 400
+            )
+        account_data = request.get_json()
+        try:
+            account_data = cls.account_schema.load(account_data)
+        except ValidationError as err:
+            return {"message": err.messages}
+        account = AccountModel.find_by_email(email=account_data["email"])
+        if account and safe_str_cmp(account.password, account_data["password"]):
+            access_token = create_access_token(identity=account)
+            refresh_token = create_refresh_token(identity=account)
+            return (
+                {
+                    "access_token": access_token,
+                    "refresh_token": refresh_token,
+                }, 200
+            )
         return {"message": INVALID_ACCOUNT_MESSAGE_401}, 401
 
 
 class AccountLogoutResource(Resource):
     """Docstring here."""
 
+    @classmethod
     @jwt_required
     def post(cls):
         jti = get_raw_jwt()["jti"]
         BLACK_LIST.add(jti)
         return {"message": ACCOUNT_LOGGED_OUT_MESSAGE_201}, 201
+
+
+class AccountResource(Resource):
+    """Docstring here."""
+
+    account_schema = AccountSchema(exclude=["password"])
+
+    @classmethod
+    @jwt_required
+    def get(cls) -> tuple:
+        claims = get_jwt_claims()
+        if claims:
+            if safe_str_cmp(claims.get("type"), "admin"):
+                try:
+                    account_data = request.get_json()
+                    account_data = cls.account_schema.load(account_data)
+                except ValidationError as err:
+                    return {"message": err.messages}
+                account = AccountModel.find_by_email(email=account_data["email"])
+                if account:
+                    return {"account": cls.account_schema.dump(account)}, 200
+                return {"message": ACCOUNT_NOT_FOUND_MESSAGE_404}, 404
+        return {"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401

@@ -10,6 +10,9 @@ class AccountTypeEnum(enum.Enum):
     regular = "regular"
     admin = "admin"
 
+    def __str__(self):
+        return self.value
+
 
 class AccountModel(db.Model):
     """Proxy class to substitute database user table."""
@@ -19,31 +22,11 @@ class AccountModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
-    type = db.Column(db.Enum(AccountTypeEnum))
+    type = db.Column(db.String(10))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(
         db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
-
-    def __init__(self, *, id=None, email="", password="", type=""):
-        """Docstring here."""
-        self.id = id
-        self.email = email
-        self.password = password
-        self.type = type
-        self.created_at = None
-        self.updated_at = None
-
-    def json(self) -> dict:
-        """JSON representation of the account model."""
-        return {
-            "id": self.id,
-            "email": self.email,
-            "password": self.password,
-            "type": self.type,
-            "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            "updated_at": self.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
-        }
 
     @classmethod
     def find_by_email(cls, *, email: str) -> "AccountModel":

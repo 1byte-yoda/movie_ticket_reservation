@@ -11,7 +11,7 @@ jwt = JWTManager()
 @jwt.user_claims_loader
 def add_claims_to_access_token(account):
     """Add claims that we can use when we log in."""
-    return {"type": account.type.value}
+    return {"type": account.type}
 
 
 @jwt.user_identity_loader

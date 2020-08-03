@@ -1,13 +1,10 @@
 from datetime import datetime
 
-import simplejson
-
 from db import db
 from .seat import SeatModel
 from .reservation import ReservationModel
 from .movie_screen import MovieScreenModel
-from ...utils import deserialize_datetime
-from .response_messages import INVALID_REQUEST_MESSAGE_400, UNKNOWN_ERROR_MESSAGE_500
+from .response_messages import UNKNOWN_ERROR_MESSAGE_500
 
 
 class SeatReservationModel(db.Model):
@@ -20,26 +17,21 @@ class SeatReservationModel(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
-    seat_id = db.Column(db.Integer, db.ForeignKey("seat.id"))
+    seat_id = db.Column(db.Integer, db.ForeignKey("seat.id"), nullable=False)
     seats = db.relationship(SeatModel, backref="seats")
-    reservation_id = db.Column(db.Integer, db.ForeignKey("reservation.id"))
+    reservation_id = db.Column(
+        db.Integer,
+        db.ForeignKey("reservation.id"),
+        nullable=False
+    )
     reservation = db.relationship(ReservationModel, backref="reservation")
-    movie_screen_id = db.Column(db.Integer, db.ForeignKey("movie_screen.id"))
+    movie_screen_id = db.Column(
+        db.Integer,
+        db.ForeignKey("movie_screen.id"),
+        nullable=False
+    )
     movie_screen = db.relationship(MovieScreenModel, backref="movie_screen")
     promo_id = db.Column(db.Integer)
-
-    def __init__(
-        self, price, seat_id, reservation, movie_screen, promo_id=None, id=None
-    ):
-        """Docstring here."""
-        self.id = id
-        self.price = price
-        self.created_at = None
-        self.updated_at = None
-        self.seat_id = seat_id
-        self.reservation = reservation
-        self.movie_screen = movie_screen
-        self.promo_id = promo_id
 
     def __repr__(self) -> str:
         """Str representation of the seat reservation model."""
@@ -49,36 +41,13 @@ class SeatReservationModel(db.Model):
             "movie_screen={self.movie_screen_id}>"
         )
 
-    def json(self) -> dict:
-        """JSON representation of the seat reservation model."""
-        return {
-            "id": self.id,
-            "price": self.price,
-            "created_at": deserialize_datetime(self.created_at),
-            "updated_at": deserialize_datetime(self.updated_at),
-            "seat_id": self.seat_id,
-            "reservation_id": self.reservation_id,
-            "movie_screen_id": self.movie_screen_id,
-        }
-
-    @classmethod
-    def _is_valid_representation(cls, *, data: dict) -> bool:
-        """Check validity of dictionary keys as representation of this model."""
-        base = {"seat_id", "movie_screen_id"}
-        return True if set(base) == set(data) else False
-
     @classmethod
     def find(cls, *, data: dict) -> "SeatReservationModel":
         """Docstring here."""
-        if not cls._is_valid_representation(data=data):
-            return {"message": INVALID_REQUEST_MESSAGE_400}, 400
         try:
             temp_reservation = cls.query.filter_by(**data).first()
-        except Exception as e:
-            return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
-        if temp_reservation:
-            temp_reservation = simplejson.dumps(temp_reservation.json())
-            temp_reservation = simplejson.loads(temp_reservation)
+        except:
+            return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)
         return temp_reservation
 
     def save_to_db(self):
@@ -86,10 +55,10 @@ class SeatReservationModel(db.Model):
         try:
             db.session.add(self)
             db.session.commit()
-        except Exception as e:
+        except:
             db.session.rollback()
             db.session.flush()
-            return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
+            return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)
 
     @classmethod
     def save_all(cls, *, seat_reservations: list):
@@ -97,7 +66,7 @@ class SeatReservationModel(db.Model):
         try:
             db.session.add_all(seat_reservations)
             db.session.commit()
-        except Exception as e:
+        except:
             db.session.rollback()
             db.session.flush()
             return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
@@ -122,7 +91,7 @@ class SeatReservationListModel(SeatReservationModel):
                 .with_entities("seat_reservation.movie_screen_id")
                 .all()
             )
-        except Exception as e:
+        except:
             db.session.rollback()
             db.session.flush()
             return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
