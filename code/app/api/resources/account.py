@@ -6,6 +6,7 @@ from flask_jwt_extended import (
     get_raw_jwt,
     get_jwt_claims,
     get_jwt_identity,
+    get_current_user,
 )
 from flask_restful import Resource
 from flask import request
@@ -22,6 +23,8 @@ from .response_messages import (
     ACCOUNT_LOGGED_OUT_MESSAGE_201,
     INVALID_REQUEST_ADMIN_MESSAGE_401,
     INVALID_ALREADY_LOGIN_400,
+    ACCOUNT_DELETED_MESSAGE_202,
+    ACCOUNT_UPDATED_MESSAGE_202,
 )
 from ..schemas.account import AccountSchema
 
@@ -39,8 +42,7 @@ class AccountRegisterResource(Resource):
         if is_logged_in:
             return (
                 {
-                    "message": INVALID_ALREADY_LOGIN_400,
-                    "login": True
+                    "message": INVALID_ALREADY_LOGIN_400
                 }, 400
             )
         account_data = request.get_json()
@@ -64,11 +66,11 @@ class AccountLoginResource(Resource):
     @jwt_optional
     def post(cls):
         is_logged_in = get_jwt_identity()
+        print(get_jwt_identity())
         if is_logged_in:
             return (
                 {
                     "message": INVALID_ALREADY_LOGIN_400,
-                    "login": True
                 }, 400
             )
         account_data = request.get_json()
@@ -78,15 +80,29 @@ class AccountLoginResource(Resource):
             return {"message": err.messages}
         account = AccountModel.find_by_email(email=account_data["email"])
         if account and safe_str_cmp(account.password, account_data["password"]):
-            access_token = create_access_token(identity=account)
+            access_token = create_access_token(identity=account, fresh=True)
             refresh_token = create_refresh_token(identity=account)
             return (
                 {
                     "access_token": access_token,
                     "refresh_token": refresh_token,
-                }, 200
+                }, 201
             )
         return {"message": INVALID_ACCOUNT_MESSAGE_401}, 401
+
+    @classmethod
+    @jwt_required
+    def put(cls) -> tuple:
+        current_user = get_current_user()
+        if current_user:
+            try:
+                update_data = request.get_json()
+                update_data = cls.account_schema.load(update_data)
+            except ValidationError as err:
+                return {"message": err.messages}
+            current_user.update(update_data=update_data)
+            return {"message": ACCOUNT_UPDATED_MESSAGE_202}, 202
+        return {"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401
 
 
 class AccountLogoutResource(Resource):
@@ -119,5 +135,23 @@ class AccountResource(Resource):
                 account = AccountModel.find_by_email(email=account_data["email"])
                 if account:
                     return {"account": cls.account_schema.dump(account)}, 200
+                return {"message": ACCOUNT_NOT_FOUND_MESSAGE_404}, 404
+        return {"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401
+
+    @classmethod
+    @jwt_required
+    def delete(cls) -> tuple:
+        claims = get_jwt_claims()
+        if claims:
+            if safe_str_cmp(claims.get("type"), "admin"):
+                try:
+                    account_data = request.get_json()
+                    account_data = cls.account_schema.load(account_data)
+                except ValidationError as err:
+                    return {"message": err.messages}
+                account = AccountModel.find_by_email(email=account_data["email"])
+                if account:
+                    account.remove_from_db()
+                    return {"message": ACCOUNT_DELETED_MESSAGE_202}, 202
                 return {"message": ACCOUNT_NOT_FOUND_MESSAGE_404}, 404
         return {"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401

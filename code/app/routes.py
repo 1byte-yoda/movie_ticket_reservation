@@ -7,10 +7,10 @@ SEAT_RESERVATION_ROUTES = [
 
 SEAT_RESERVATION_LIST_ROUTES = ["/seat-reservations"]
 
-ACCOUNT_ROUTES = ["/account"]
+ACCOUNT_ROUTES = ["/account", "/account/delete"]
 
 ACCOUNT_REGISTER_ROUTES = ["/register"]
 
-ACCOUNT_LOGIN_ROUTES = ["/login"]
+ACCOUNT_LOGIN_ROUTES = ["/login", "/account/update"]
 
 ACCOUNT_LOGOUT_ROUTES = ["/logout"]

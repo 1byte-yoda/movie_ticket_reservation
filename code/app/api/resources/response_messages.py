@@ -7,6 +7,8 @@ ACCOUNT_EXISTS_MESSAGE_400 = "Account with that email already exists."
 ACCOUNT_CREATED_MESSAGE_201 = "Account created successfully."
 ACCOUNT_LOGGED_OUT_MESSAGE_201 = "Logged out successfully."
 ACCOUNT_NOT_FOUND_MESSAGE_404 = "Account not found in the database."
+ACCOUNT_DELETED_MESSAGE_202 = "Account deleted successfully."
+ACCOUNT_UPDATED_MESSAGE_202 = "Account updated successfully."
 INVALID_ACCOUNT_MESSAGE_401 = "Invalid Account Credentials."
 INVALID_ALREADY_LOGIN_400 = "You are already logged in!"
 

@@ -49,3 +49,10 @@ class AccountModel(db.Model):
         """Remove an account from the database."""
         db.session.delete(self)
         db.session.commit()
+
+    def update(self, update_data: dict):
+        """Update an account in the database."""
+        self.email = update_data["email"]
+        self.password = update_data["password"]
+        db.session.add(self)
+        db.session.commit()
