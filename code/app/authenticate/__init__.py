@@ -1,7 +1,7 @@
 """JWT Authentication."""
 from flask_jwt_extended import JWTManager
 
-from ..api.models.account import AccountModel
+from ..api.models.user import UserModel
 from .blacklist import BLACK_LIST
 
 
@@ -9,21 +9,21 @@ jwt = JWTManager()
 
 
 @jwt.user_claims_loader
-def add_claims_to_access_token(account):
+def add_claims_to_access_token(user):
     """Add claims that we can use when we log in."""
-    return {"type": account.type}
+    return {"type": user.account.type}
 
 
 @jwt.user_identity_loader
-def user_identity_lookup(account):
+def user_identity_lookup(user):
     """Add identity for creating jwt access token."""
-    return account.id
+    return user.id
 
 
 @jwt.user_loader_callback_loader
 def user_loader_callback(identity):
-    """Add the current Account Object to the current session."""
-    return AccountModel.find_by_id(_id=identity)
+    """Add the current UserModel Object to the current session."""
+    return UserModel.find_by_id(id=identity)
 
 
 @jwt.token_in_blacklist_loader

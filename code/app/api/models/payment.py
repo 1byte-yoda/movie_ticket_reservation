@@ -30,11 +30,7 @@ class PaymentModel(db.Model):
 
     def json(self):
         """JSON representation of PaymentModel."""
-        return {
-            "id": self.id,
-            "type": self.type,
-            "total_price": self.total_price
-        }
+        return {"id": self.id, "type": self.type, "total_price": self.total_price}
 
     def save_to_db(self):
         """Docstring here."""

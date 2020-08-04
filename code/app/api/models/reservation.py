@@ -52,7 +52,7 @@ class ReservationModel(db.Model):
             "head_count": self.head_count,
             "reserve_datetime": self.reserve_datetime,
             "account": self.account.json(),
-            "payment": self.payment.json()
+            "payment": self.payment.json(),
         }
 
     def generate_json_ticket(self) -> dict:

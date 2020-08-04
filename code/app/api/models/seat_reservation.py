@@ -4,7 +4,6 @@ from db import db
 from .seat import SeatModel
 from .reservation import ReservationModel
 from .movie_screen import MovieScreenModel
-from .response_messages import UNKNOWN_ERROR_MESSAGE_500
 
 
 class SeatReservationModel(db.Model):
@@ -20,15 +19,11 @@ class SeatReservationModel(db.Model):
     seat_id = db.Column(db.Integer, db.ForeignKey("seat.id"), nullable=False)
     seats = db.relationship(SeatModel, backref="seats")
     reservation_id = db.Column(
-        db.Integer,
-        db.ForeignKey("reservation.id"),
-        nullable=False
+        db.Integer, db.ForeignKey("reservation.id"), nullable=False
     )
     reservation = db.relationship(ReservationModel, backref="reservation")
     movie_screen_id = db.Column(
-        db.Integer,
-        db.ForeignKey("movie_screen.id"),
-        nullable=False
+        db.Integer, db.ForeignKey("movie_screen.id"), nullable=False
     )
     movie_screen = db.relationship(MovieScreenModel, backref="movie_screen")
     promo_id = db.Column(db.Integer)
@@ -49,20 +44,18 @@ class SeatReservationModel(db.Model):
             "reservation": self.reservation.json(),
             "cinema": {
                 "id": self.movie_screen.screen.cinema.id,
-                "name": self.movie_screen.screen.cinema.name
+                "name": self.movie_screen.screen.cinema.name,
+                "open_time": self.movie_screen.screen.cinema.open_time,
+                "close_time": self.movie_screen.screen.cinema.close_time
             },
-            "screen": {
-                "id": self.movie_screen.screen_id,
-            },
-            "seat": {
-                "id": self.seat_id
-            },
+            "screen": {"id": self.movie_screen.screen_id},
+            "seat": {"id": self.seat_id},
             "movie": {
                 "id": self.movie_screen.movie.id,
                 "name": self.movie_screen.movie.name,
                 "play_datetime": self.movie_screen.schedule.play_datetime,
                 "end_datetime": self.movie_screen.schedule.end_datetime,
-            }
+            },
         }
 
     @classmethod

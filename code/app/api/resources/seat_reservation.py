@@ -23,10 +23,7 @@ from .response_messages import (
     UNKNOWN_ERROR_MESSAGE_500,
     RESERVATION_NOT_FOUND_MESSAGE_404,
 )
-from ..schemas.seat_reservation import (
-    SeatReservationSchema,
-    SeatReservationPostSchema
-)
+from ..schemas.seat_reservation import SeatReservationSchema, SeatReservationPostSchema
 
 
 seat_reservation_post_schema = SeatReservationPostSchema()
@@ -50,9 +47,7 @@ class SeatReservationResource(Resource):
         claims = get_jwt_claims()
         if safe_str_cmp(claims.get("type"), "admin"):
             try:
-                seat_reservation = SeatReservationModel.find(
-                    data=seat_reservation_data
-                )
+                seat_reservation = SeatReservationModel.find(data=seat_reservation_data)
             except:
                 return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
 
@@ -72,8 +67,8 @@ class SeatReservationResource(Resource):
         """Create a reservation."""
         seat_reservation_data = request.get_json()
         try:
-            seat_reservation_data = (
-                seat_reservation_post_schema.load(seat_reservation_data)
+            seat_reservation_data = seat_reservation_post_schema.load(
+                seat_reservation_data
             )
         except ValidationError as err:
             return {"message": err.messages}, 400
@@ -82,7 +77,7 @@ class SeatReservationResource(Resource):
         # eg. show only available seats for a particular screen
 
         # Account
-        account = get_current_user()
+        account = get_current_user().account
 
         # Movie Screen
         screen_id = seat_reservation_data["screen_id"]
@@ -115,7 +110,9 @@ class SeatReservationResource(Resource):
             occupied_seats = SeatReservationListModel.which_occupied(
                 seat_id_list=seat_id_list, movie_screen=movie_screen,
             )
-            is_occupied_seats = any(seat_id in occupied_seats for seat_id in seat_id_list)
+            is_occupied_seats = any(
+                seat_id in occupied_seats for seat_id in seat_id_list
+            )
             if is_occupied_seats:
                 return ({"message": SEATS_OCCUPIED_MESSAGE_401}, 400)
         except:
@@ -165,7 +162,8 @@ class SeatReservationResource(Resource):
             {
                 "message": SEAT_RESERVATION_CREATED_MESSAGE_201,
                 "seat_reservation_summary": seat_reservation_summary,
-            }, 201,
+            },
+            201,
         )
 
     @jwt_required
@@ -188,9 +186,9 @@ class SeatReservationListResource(Resource):
             if safe_str_cmp(claims.get("type"), "admin"):
                 try:
                     data = {
-                        "reservation_id": cls.schema.load(
-                            request.get_json()
-                        )["reservation"]["id"]
+                        "reservation_id": cls.schema.load(request.get_json())[
+                            "reservation"
+                        ]["id"]
                     }
                 except ValidationError as err:
                     return {"message": err.messages}, 400

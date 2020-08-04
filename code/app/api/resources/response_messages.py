@@ -27,3 +27,7 @@ RESERVATION_NOT_FOUND_MESSAGE_404 = "Reservation id not found."
 
 # MOVIE_SCREEN
 MOVIE_SCREEN_NOT_FOUND_MESSAGE_404 = "movie-screen-schedule combination not found."
+
+
+# CINEMA
+CINEMA_NOT_FOUND_404 = "Cinema not found."

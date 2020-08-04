@@ -1,10 +1,15 @@
 from datetime import datetime
+from typing import List
 
 from db import db
 
 
 class MovieModel(db.Model):
-    """Docstring here."""
+    """A model that will interact with the movie table SQL queries.
+
+    Contains multiple functions that can perform the basic CRUD operation
+    for 1 row/entry in the movie table.
+    """
 
     __tablename__ = "movie"
 
@@ -16,13 +21,47 @@ class MovieModel(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
-    def __init__(self, id, name, price, description, rating):
-        self.id = id
-        self.name = name
-        self.price = price
-        self.description = description
-        self.rating = rating
+    def json(self):
+        """JSON representation of the MovieModel."""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "price": self.price,
+            "description": self.description,
+            "rating": self.rating
+        }
 
     @classmethod
-    def find_by_id(cls, *, id_: int) -> "MovieModel":
-        return cls.query.filter_by(id=id_).first()
+    def find_by_id(cls, *, id: int) -> "MovieModel":
+        """Find a movie by id."""
+        return cls.query.filter_by(id=id).first()
+
+    def save_to_db(self):
+        """Save a new movie in the database."""
+        db.session.add(self)
+        db.session.commit()
+
+    def update(self, update_data: dict):
+        """Update a movie in the database."""
+        (db.session.query(MovieModel)
+                   .filter_by(id=self.id)
+                   .update(update_data))
+        db.session.commit()
+
+    def remove_from_db(self):
+        """Remove a movie from the database."""
+        db.session.delete(self)
+        db.session.commit()
+
+
+class MovieListModel(MovieModel):
+    """An extension of MovieModel.
+
+    All SQL queries that works with an array of
+    MovieModel is implemented here.
+    """
+
+    @classmethod
+    def find_recommended_movies(cls, movie_id_list: list) -> List[MovieModel]:
+        """Find all of recommended movies for a user."""
+        return cls.query.filter(MovieModel.id.in_(movie_id_list))

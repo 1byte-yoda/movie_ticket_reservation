@@ -24,9 +24,12 @@ class AccountModel(db.Model):
     password = db.Column(db.String(120), nullable=False)
     type = db.Column(db.String(10))
     created_at = db.Column(db.DateTime, default=datetime.now)
-    updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.now
-    )
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.now)
+
+    def __init__(self, email, password, type):
+        self.email = email
+        self.password = password
+        self.type = type
 
     def json(self):
         """JSON representation of AccountModel."""
@@ -39,9 +42,9 @@ class AccountModel(db.Model):
         return account
 
     @classmethod
-    def find_by_id(cls, *, _id: int) -> "AccountModel":
+    def find_by_id(cls, *, id: int) -> "AccountModel":
         """Docstring here."""
-        account = cls.query.filter_by(id=_id).first()
+        account = cls.query.filter_by(id=id).first()
         return account
 
     def register(self):
@@ -56,7 +59,5 @@ class AccountModel(db.Model):
 
     def update(self, update_data: dict):
         """Update an account in the database."""
-        (db.session.query(AccountModel)
-                   .filter_by(id=self.id)
-                   .update(update_data))
+        (db.session.query(AccountModel).filter_by(id=self.id).update(update_data))
         db.session.commit()

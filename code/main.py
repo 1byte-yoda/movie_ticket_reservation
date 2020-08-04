@@ -10,7 +10,7 @@ app = create_app()
 @app.errorhandler(ValidationError)
 def handle_marshmallow_validation(err):
     """Handle the error made by marshmallow."""
-    return jsonify(err.messages)
+    return jsonify({"message": err.messages})
 
 
 if __name__ == "__main__":

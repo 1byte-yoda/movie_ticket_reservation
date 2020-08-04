@@ -1,16 +1,17 @@
 SEAT_RESERVATION_ROUTES = [
-    "/seat-reservation/create",
-    "/seat-reservation/update",
-    "/seat-reservation",
-    "/seat-reservation/cancel",
+    "/api/seat-reservation/create",
+    "/api/seat-reservation/update",
+    "/api/seat-reservation",
+    "/api/seat-reservation/cancel",
 ]
 
-SEAT_RESERVATION_LIST_ROUTES = ["/seat-reservations"]
+SEAT_RESERVATION_LIST_ROUTES = ["/api/seat-reservations"]
 
-ACCOUNT_ROUTES = ["/account", "/account/delete"]
+ACCOUNT_ROUTES = ["/api/account"]
+ACCOUNT_LOGIN_ROUTES = ["/api/auth/login", "/api/account/update"]
+ACCOUNT_LOGOUT_ROUTES = ["/api/auth/logout"]
 
-ACCOUNT_REGISTER_ROUTES = ["/register"]
+USER_REGISTER_ROUTES = ["/api/user/register"]
+USER_ROUTES = ["/api/user/delete"]
 
-ACCOUNT_LOGIN_ROUTES = ["/login", "/account/update"]
-
-ACCOUNT_LOGOUT_ROUTES = ["/logout"]
+CINEMA_ROUTES = ["/api/cinema"]
