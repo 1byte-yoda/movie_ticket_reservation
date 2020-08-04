@@ -1,8 +1,11 @@
 import simplejson
 from marshmallow import Schema, fields
 
-from ...serializer import ma
-from ..models.seat_reservation import SeatReservationModel
+from .reservation import ReservationSchema
+from .cinema import CinemaSchema
+from .screen import ScreenSchema
+from .seat import SeatSchema
+from .movie import MovieSchema
 
 
 class SeatReservationPostSchema(Schema):
@@ -14,12 +17,13 @@ class SeatReservationPostSchema(Schema):
     schedule_id = fields.Int(required=True)
 
 
-class SeatReservationSchema(ma.SQLAlchemyAutoSchema):
+class SeatReservationSchema(Schema):
     """Use to represent the SeatReservationModel as JSON data."""
 
-    class Meta:
-        model = SeatReservationModel
-        json_module = simplejson
-        load_only = ("id", )
-        dump_only = ("movie_screen_id", "reservation_id", "seat_id")
-        include_fk = True
+    id = fields.Int(required=True)
+    price = fields.Float()
+    reservation = fields.Nested(ReservationSchema)
+    cinema = fields.Nested(CinemaSchema)
+    screen = fields.Nested(ScreenSchema)
+    seat = fields.Nested(SeatSchema)
+    movie = fields.Nested(MovieSchema)

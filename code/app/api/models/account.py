@@ -28,6 +28,10 @@ class AccountModel(db.Model):
         db.DateTime, default=datetime.utcnow, onupdate=datetime.now
     )
 
+    def json(self):
+        """JSON representation of AccountModel."""
+        return {"id": self.id, "email": self.email, "type": self.type}
+
     @classmethod
     def find_by_email(cls, *, email: str) -> "AccountModel":
         """Docstring here."""

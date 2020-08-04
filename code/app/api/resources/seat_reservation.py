@@ -1,4 +1,3 @@
-import simplejson
 from flask import request
 from flask_restful import Resource
 from flask_jwt_extended import (
@@ -9,6 +8,7 @@ from flask_jwt_extended import (
 from werkzeug.security import safe_str_cmp
 from marshmallow.exceptions import ValidationError
 
+from db import db
 from ..models.seat_reservation import SeatReservationModel, SeatReservationListModel
 from ..models.movie_screen import MovieScreenModel
 from ..models.payment import PaymentModel
@@ -20,6 +20,8 @@ from .response_messages import (
     SEATS_NOT_FOUND_MESSAGE_404,
     SEAT_RESERVATION_CREATED_MESSAGE_201,
     MOVIE_SCREEN_NOT_FOUND_MESSAGE_404,
+    UNKNOWN_ERROR_MESSAGE_500,
+    RESERVATION_NOT_FOUND_MESSAGE_404,
 )
 from ..schemas.seat_reservation import (
     SeatReservationSchema,
@@ -27,36 +29,46 @@ from ..schemas.seat_reservation import (
 )
 
 
-seat_reservation_schema = SeatReservationSchema()
 seat_reservation_post_schema = SeatReservationPostSchema()
 
 
 class SeatReservationResource(Resource):
     """Docstring here."""
 
+    schema = SeatReservationSchema()
+
+    @classmethod
     @jwt_required
-    def get(self):
+    def get(cls):
         """Get a seat reservation."""
         seat_reservation_data = request.get_json()
         try:
-            seat_reservation_data = seat_reservation_schema.load(seat_reservation_data)
+            seat_reservation_data = cls.schema.load(seat_reservation_data)
         except ValidationError as err:
             return {"message": err.messages}
+
         claims = get_jwt_claims()
         if safe_str_cmp(claims.get("type"), "admin"):
-            seat_reservation = SeatReservationModel.find(data=seat_reservation_data)
-            seat_reservation = simplejson.loads(
-                seat_reservation_schema.dumps(seat_reservation)
-            )
-            return (
-                {"seat_reservation": seat_reservation}, 200
-                if seat_reservation
-                else ({"message": SEAT_RESERVATION_NOT_FOUND_MESSAGE_404}, 404)
-            )
+            try:
+                seat_reservation = SeatReservationModel.find(
+                    data=seat_reservation_data
+                )
+            except:
+                return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
+
+            if seat_reservation:
+                try:
+                    seat_reservation = cls.schema.dump(seat_reservation[0].json())
+                except ValidationError as err:
+                    return {"message": err.messages}, 400
+                return {"seat_reservation": seat_reservation}, 200
+
+            return {"message": SEAT_RESERVATION_NOT_FOUND_MESSAGE_404}, 404
         return {"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401
 
+    @classmethod
     @jwt_required
-    def post(self):
+    def post(cls):
         """Create a reservation."""
         seat_reservation_data = request.get_json()
         try:
@@ -64,7 +76,7 @@ class SeatReservationResource(Resource):
                 seat_reservation_post_schema.load(seat_reservation_data)
             )
         except ValidationError as err:
-            return {"message": err.messages}
+            return {"message": err.messages}, 400
 
         # Duplicate Handler will be implemented in frontend as well,
         # eg. show only available seats for a particular screen
@@ -98,12 +110,18 @@ class SeatReservationResource(Resource):
         largest_seat_id = max(seat_id_list)
         if largest_seat_id > max_screen_capacity:
             return ({"message": SEATS_NOT_FOUND_MESSAGE_404}, 404)
-        occupied_seats = SeatReservationListModel.which_occupied(
-            seat_id_list=seat_id_list, movie_screen=movie_screen,
-        )
-        is_occupied_seats = any(seat_id in occupied_seats for seat_id in seat_id_list)
-        if is_occupied_seats:
-            return ({"message": SEATS_OCCUPIED_MESSAGE_401}, 400)
+
+        try:
+            occupied_seats = SeatReservationListModel.which_occupied(
+                seat_id_list=seat_id_list, movie_screen=movie_screen,
+            )
+            is_occupied_seats = any(seat_id in occupied_seats for seat_id in seat_id_list)
+            if is_occupied_seats:
+                return ({"message": SEATS_OCCUPIED_MESSAGE_401}, 400)
+        except:
+            db.session.rollback()
+            db.session.flush()
+            return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
 
         # Payment
         head_count = len(seat_id_list)
@@ -130,13 +148,24 @@ class SeatReservationResource(Resource):
                 movie_screen=movie_screen,
             )
             seat_reservation_list.append(seat_reservation)
-        SeatReservationModel.save_all(seat_reservations=seat_reservation_list)
+        try:
+            SeatReservationModel.save_all(seat_reservations=seat_reservation_list)
+        except:
+            db.session.rollback()
+            db.session.flush()
+            return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
+
+        try:
+            seat_reservation_summary = reservation.generate_json_ticket()
+        except:
+            db.session.flush()
+            return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
+
         return (
             {
                 "message": SEAT_RESERVATION_CREATED_MESSAGE_201,
-                "seat_reservation": reservation.generate_json_ticket(),
-            },
-            201,
+                "seat_reservation_summary": seat_reservation_summary,
+            }, 201,
         )
 
     @jwt_required
@@ -148,16 +177,38 @@ class SeatReservationResource(Resource):
 class SeatReservationListResource(Resource):
     """Docstring here."""
 
+    schema = SeatReservationSchema(load_only=["reservation"], dump_only=["id"])
+
+    @classmethod
     @jwt_required
-    def get(self):
-        """Get all of reservations in our system."""
+    def get(cls):
+        """Get a list of reservations in our system."""
         claims = get_jwt_claims()
         if claims:
             if safe_str_cmp(claims.get("type"), "admin"):
-                reservations = SeatReservationListModel.find_all()
-                reservations = (
-                    simplejson.loads(seat_reservation_schema.dumps(reservation))
-                    for reservation in reservations
-                )
-                return {"seat_reservations": list(reservations)}, 200
+                try:
+                    data = {
+                        "reservation_id": cls.schema.load(
+                            request.get_json()
+                        )["reservation"]["id"]
+                    }
+                except ValidationError as err:
+                    return {"message": err.messages}, 400
+
+                try:
+                    reservations = SeatReservationModel.find(data=data)
+                except:
+                    return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
+
+                if reservations:
+                    try:
+                        reservations = (
+                            cls.schema.dump(reservation.json())
+                            for reservation in reservations
+                        )
+                    except ValidationError as err:
+                        return {"message": err.messages}, 400
+                    return {"seat_reservations": list(reservations)}, 200
+
+                return {"message": RESERVATION_NOT_FOUND_MESSAGE_404}
         return {"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401

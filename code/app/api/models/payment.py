@@ -18,7 +18,7 @@ class PaymentModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     token_id = db.Column(db.Text)
     total_price = db.Column(db.Float(8, 2))
-    type = db.Column(db.Enum(PaymentTypeEnum))
+    type = db.Column(db.String(30))
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -27,6 +27,14 @@ class PaymentModel(db.Model):
         self.token_id = token_id
         self.total_price = (total_price,)
         self.type = type
+
+    def json(self):
+        """JSON representation of PaymentModel."""
+        return {
+            "id": self.id,
+            "type": self.type,
+            "total_price": self.total_price
+        }
 
     def save_to_db(self):
         """Docstring here."""

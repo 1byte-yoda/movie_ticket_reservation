@@ -46,6 +46,15 @@ class ReservationModel(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    def json(self):
+        return {
+            "id": self.id,
+            "head_count": self.head_count,
+            "reserve_datetime": self.reserve_datetime,
+            "account": self.account.json(),
+            "payment": self.payment.json()
+        }
+
     def generate_json_ticket(self) -> dict:
         """Generate a JSON ticket summary of a reservation."""
         ticket = (

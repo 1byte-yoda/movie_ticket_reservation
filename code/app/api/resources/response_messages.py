@@ -1,5 +1,6 @@
 # GENERAL
 INVALID_REQUEST_ADMIN_MESSAGE_401 = "Invalid request, please contact the admin."
+UNKNOWN_ERROR_MESSAGE_500 = "An unknown error occured."
 
 
 # ACCOUNT
@@ -12,11 +13,16 @@ ACCOUNT_UPDATED_MESSAGE_202 = "Account updated successfully."
 INVALID_ACCOUNT_MESSAGE_401 = "Invalid Account Credentials."
 INVALID_ALREADY_LOGIN_400 = "You are already logged in!"
 
+
 # SEAT_RESERVATION
 SEAT_RESERVATION_NOT_FOUND_MESSAGE_404 = "Reservation not found."
 SEATS_OCCUPIED_MESSAGE_401 = "Invalid request, seat(s) already occupied."
 SEATS_NOT_FOUND_MESSAGE_404 = "Seat(s) not found in the database."
 SEAT_RESERVATION_CREATED_MESSAGE_201 = "Reservation created successfully."
+
+
+# RESERVATION
+RESERVATION_NOT_FOUND_MESSAGE_404 = "Reservation id not found."
 
 
 # MOVIE_SCREEN

@@ -1,8 +1,13 @@
-from ...serializer import ma
+from marshmallow import Schema, fields
+
 from ..models.account import AccountModel
 
 
-class AccountSchema(ma.SQLAlchemyAutoSchema):
+class AccountSchema(Schema):
     class Meta:
-        model = AccountModel
-        load_only = ("password")
+        load_only = ("password",)
+
+    id = fields.Int()
+    email = fields.Email()
+    password = fields.Str()
+    type = fields.Str()

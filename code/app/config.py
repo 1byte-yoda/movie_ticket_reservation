@@ -9,10 +9,9 @@ class Config:
     SECRET_KEY = "change_this_later_bro"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     PROPAGATE_EXCEPTIONS = True
-    JWT_EXPIRATION_DELTA = timedelta(seconds=3600)
+    JWT_EXPIRATION_DELTA = timedelta(days=3)
     JWT_AUTH_USERNAME_KEY = "email"
     JWT_BLACKLIST_ENABLED = True
-    
 
     @staticmethod
     def init_app(app):

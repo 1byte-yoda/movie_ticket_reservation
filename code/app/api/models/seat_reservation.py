@@ -41,35 +41,46 @@ class SeatReservationModel(db.Model):
             "movie_screen={self.movie_screen_id}>"
         )
 
+    def json(self):
+        """JSON represation of SeatReservationModel."""
+        return {
+            "id": self.id,
+            "price": self.price,
+            "reservation": self.reservation.json(),
+            "cinema": {
+                "id": self.movie_screen.screen.cinema.id,
+                "name": self.movie_screen.screen.cinema.name
+            },
+            "screen": {
+                "id": self.movie_screen.screen_id,
+            },
+            "seat": {
+                "id": self.seat_id
+            },
+            "movie": {
+                "id": self.movie_screen.movie.id,
+                "name": self.movie_screen.movie.name,
+                "play_datetime": self.movie_screen.schedule.play_datetime,
+                "end_datetime": self.movie_screen.schedule.end_datetime,
+            }
+        }
+
     @classmethod
     def find(cls, *, data: dict) -> "SeatReservationModel":
         """Docstring here."""
-        try:
-            temp_reservation = cls.query.filter_by(**data).first()
-        except:
-            return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)
+        temp_reservation = cls.query.filter_by(**data).all()
         return temp_reservation
 
     def save_to_db(self):
         """Docstring here."""
-        try:
-            db.session.add(self)
-            db.session.commit()
-        except:
-            db.session.rollback()
-            db.session.flush()
-            return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)
+        db.session.add(self)
+        db.session.commit()
 
     @classmethod
     def save_all(cls, *, seat_reservations: list):
         """Docstring here."""
-        try:
-            db.session.add_all(seat_reservations)
-            db.session.commit()
-        except:
-            db.session.rollback()
-            db.session.flush()
-            return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
+        db.session.add_all(seat_reservations)
+        db.session.commit()
 
 
 class SeatReservationListModel(SeatReservationModel):
@@ -83,16 +94,11 @@ class SeatReservationListModel(SeatReservationModel):
     @classmethod
     def which_occupied(cls, *, seat_id_list: list, movie_screen: object) -> list:
         """Query the database for occupied seats in a given movie_screen."""
-        try:
-            seats = (
-                cls.query.join(MovieScreenModel)
-                .filter(movie_screen.id == cls.movie_screen_id)
-                .filter(cls.seat_id.in_(seat_id_list))
-                .with_entities("seat_reservation.movie_screen_id")
-                .all()
-            )
-        except:
-            db.session.rollback()
-            db.session.flush()
-            return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
+        seats = (
+            cls.query.join(MovieScreenModel)
+            .filter(movie_screen.id == cls.movie_screen_id)
+            .filter(cls.seat_id.in_(seat_id_list))
+            .with_entities("seat_reservation.movie_screen_id")
+            .all()
+        )
         return list(*zip(*seats))

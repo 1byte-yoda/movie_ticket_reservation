@@ -119,7 +119,7 @@ class AccountLogoutResource(Resource):
 class AccountResource(Resource):
     """Docstring here."""
 
-    account_schema = AccountSchema(exclude=["password"])
+    account_schema = AccountSchema()
 
     @classmethod
     @jwt_required
