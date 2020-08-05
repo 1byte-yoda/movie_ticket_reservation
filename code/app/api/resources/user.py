@@ -13,7 +13,9 @@ from .response_messages import (
     INVALID_REQUEST_ADMIN_MESSAGE_401,
     UNKNOWN_ERROR_MESSAGE_500
 )
+from ..models.movie_rating import MovieRatingModel
 from ..models.account import AccountModel
+from ..models.location import LocationModel
 from ..models.user import UserModel
 from ..schemas.user import UserSchema
 from ..schemas.account import AccountSchema
@@ -42,11 +44,13 @@ class UserRegisterResource(Resource):
         if AccountModel.find_by_email(email=user_data["account"]["email"]):
             return {"message": ACCOUNT_EXISTS_MESSAGE_400}, 400
         new_account = AccountModel(**user_data["account"])
+        location = LocationModel(barangay_id=user_data["location"]["barangay"]["id"])
         user = UserModel(
             first_name=user_data["first_name"],
             last_name=user_data["last_name"],
             contact_no=user_data["contact_no"],
-            account=new_account
+            account=new_account,
+            location=location
         )
         try:
             user.save_to_db()

@@ -15,7 +15,7 @@ class ScreenModel(db.Model):
     __tablename__ = "screen"
 
     id = db.Column(db.Integer, primary_key=True)
-    capacity = db.Column(db.Integer)
+    capacity = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 

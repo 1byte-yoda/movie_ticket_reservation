@@ -14,9 +14,9 @@ class MovieModel(db.Model):
     __tablename__ = "movie"
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120))
-    price = db.Column(db.Float(7, 2))
-    description = db.Column(db.Text)
+    name = db.Column(db.String(120), nullable=False)
+    price = db.Column(db.Float(7, 2), nullable=False)
+    description = db.Column(db.Text, nullable=False)
     rating = db.Column(db.Float(2, 1))
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)

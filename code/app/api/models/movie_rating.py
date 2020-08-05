@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy.dialects.mysql import TINYINT
 
 from db import db
+from .user import UserModel
 from .payment import PaymentModel
 from .movie import MovieModel
 
@@ -16,11 +17,12 @@ class MovieRatingModel(db.Model):
     rating = db.Column(TINYINT)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
-
-    payment_id = db.Column(db.Integer, db.ForeignKey("payment.id"))
-    payment = db.relationship(PaymentModel, backref="payment", uselist=False)
-    movie_id = db.Column(db.Integer, db.ForeignKey("movie.id"))
-    movie = db.relationship(MovieModel, backref="movie")
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    user = db.relationship(UserModel, backref="user.id")
+    payment_id = db.Column(db.Integer, db.ForeignKey("payment.id"), nullable=False)
+    payment = db.relationship(PaymentModel, backref="movie_rating_payment", uselist=False)
+    movie_id = db.Column(db.Integer, db.ForeignKey("movie.id"), nullable=False)
+    movie = db.relationship(MovieModel, backref="movie_rating_movie")
 
     def __init__(self):
         pass

@@ -12,21 +12,22 @@ class SeatReservationModel(db.Model):
     __tablename__ = "seat_reservation"
 
     id = db.Column(db.Integer, primary_key=True)
-    price = db.Column(db.Float(6, 2))
+    price = db.Column(db.Float(6, 2), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
     seat_id = db.Column(db.Integer, db.ForeignKey("seat.id"), nullable=False)
-    seats = db.relationship(SeatModel, backref="seats")
+    seats = db.relationship(SeatModel, backref="seats", lazy=True)
     reservation_id = db.Column(
         db.Integer, db.ForeignKey("reservation.id"), nullable=False
     )
-    reservation = db.relationship(ReservationModel, backref="reservation")
+    reservation = db.relationship(ReservationModel, backref="reservation", lazy=True)
     movie_screen_id = db.Column(
         db.Integer, db.ForeignKey("movie_screen.id"), nullable=False
     )
     movie_screen = db.relationship(MovieScreenModel, backref="movie_screen")
     promo_id = db.Column(db.Integer)
+    db.UniqueConstraint(seat_id, reservation_id, movie_screen_id,)
 
     def __repr__(self) -> str:
         """Str representation of the seat reservation model."""

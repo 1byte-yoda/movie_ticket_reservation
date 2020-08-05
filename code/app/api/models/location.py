@@ -1,7 +1,5 @@
 from datetime import datetime
 
-from sqlalchemy.dialects.mysql import CHAR
-
 from db import db
 from .barangay import BarangayModel
 
@@ -14,7 +12,7 @@ class LocationModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
-    barangay_id = db.Column(db.String(120), db.ForeignKey("barangay.id"), nullable=False)
+    barangay_id = db.Column(db.Integer, db.ForeignKey("barangay.id"), nullable=False)
     barangay = db.relationship(BarangayModel, backref="barangay", lazy=True)
 
     def __init__(self, barangay_id):

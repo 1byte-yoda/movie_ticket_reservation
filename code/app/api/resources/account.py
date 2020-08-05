@@ -20,6 +20,7 @@ from ..models.account import AccountModel
 from ..models.user import UserModel
 from .response_messages import (
     ACCOUNT_NOT_FOUND_MESSAGE_404,
+    ACCOUNT_EXISTS_MESSAGE_400,
     INVALID_ACCOUNT_MESSAGE_401,
     ACCOUNT_LOGGED_OUT_MESSAGE_201,
     INVALID_REQUEST_ADMIN_MESSAGE_401,
@@ -29,19 +30,8 @@ from .response_messages import (
 from ..schemas.account import AccountSchema
 
 
-class AccountRegisterResource(Resource):
-    """Docstring Here."""
-
-    @classmethod
-    def post(cls):
-        """Docstring Here."""
-        pass
-
-
 class AccountLoginResource(Resource):
     """Docstring here."""
-
-    account_schema = AccountSchema(exclude=["type"])
 
     @classmethod
     @jwt_optional
@@ -51,11 +41,12 @@ class AccountLoginResource(Resource):
             return ({"message": INVALID_ALREADY_LOGIN_400}, 400)
         account_data = request.get_json()
         try:
-            account_data = cls.account_schema.load(account_data)
+            account_schema = AccountSchema(exclude=["type"])
+            account_data = account_schema.load(account_data)
         except ValidationError as err:
             return {"message": err.messages}
         account = AccountModel.find_by_email(email=account_data["email"])
-        if account and safe_str_cmp(account.password, account_data["password"]):
+        if account and account.verify_password(account_data["password"]):
             user = UserModel.find_by_account_id(id=account.id)
             access_token = create_access_token(
                 identity=user, fresh=True, expires_delta=timedelta(days=3)
@@ -75,11 +66,12 @@ class AccountLoginResource(Resource):
         current_user = get_current_user().account
         if current_user:
             try:
+                account_schema = AccountSchema(exclude=["email", "type"])
                 update_data = request.get_json()
-                update_data = cls.account_schema.load(update_data)
+                update_data = account_schema.load(update_data)
             except ValidationError as err:
                 return {"message": err.messages}
-            current_user.update(update_data=update_data)
+            current_user.change_password(update_data["password"])
             return {"message": ACCOUNT_UPDATED_MESSAGE_202}, 202
         return {"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401
 

@@ -16,12 +16,14 @@ class ScheduleModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
-    play_datetime = db.Column(db.DateTime)
-    end_datetime = db.Column(db.DateTime)
+    play_datetime = db.Column(db.DateTime, nullable=False)
+    end_datetime = db.Column(db.DateTime, nullable=False)
     master_schedule_id = db.Column(
         db.Integer, db.ForeignKey("master_schedule.id"), nullable=False
     )
-    master_schedule = db.relationship(MasterScheduleModel, backref="master_schedule")
+    master_schedule = db.relationship(
+        MasterScheduleModel, backref="master_schedule", lazy=True
+    )
     db.UniqueConstraint(master_schedule_id, play_datetime, end_datetime,)
 
     def json(self):

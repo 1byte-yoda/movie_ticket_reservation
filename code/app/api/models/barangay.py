@@ -16,6 +16,10 @@ class BarangayModel(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
+    def __init__(self, name, city_id):
+        self.name = name
+        self.city_id = city_id
+
     def json(self):
         """JSON representation of Barangay."""
         return {

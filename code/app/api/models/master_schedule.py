@@ -9,8 +9,8 @@ class MasterScheduleModel(db.Model):
     __tablename__ = "master_schedule"
 
     id = db.Column(db.Integer, primary_key=True)
-    launch_datetime = db.Column(db.DateTime)
-    phase_out_datetime = db.Column(db.DateTime)
+    launch_datetime = db.Column(db.DateTime, nullable=False)
+    phase_out_datetime = db.Column(db.DateTime, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 

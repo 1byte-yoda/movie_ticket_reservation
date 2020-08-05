@@ -1,13 +1,6 @@
 from datetime import datetime
-import enum
 
 from db import db
-
-
-class PaymentTypeEnum(enum.Enum):
-    """Docstring here."""
-
-    paymaya = "paymaya"
 
 
 class PaymentModel(db.Model):
@@ -16,9 +9,9 @@ class PaymentModel(db.Model):
     __tablename__ = "payment"
 
     id = db.Column(db.Integer, primary_key=True)
-    token_id = db.Column(db.Text)
-    total_price = db.Column(db.Float(8, 2))
-    type = db.Column(db.String(30))
+    token_id = db.Column(db.Text, nullable=False)
+    total_price = db.Column(db.Float(8, 2), nullable=False)
+    type = db.Column(db.String(50), nullable=False, unique=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 

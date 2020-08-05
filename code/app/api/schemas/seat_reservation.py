@@ -1,4 +1,3 @@
-import simplejson
 from marshmallow import Schema, fields
 
 from .reservation import ReservationSchema

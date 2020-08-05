@@ -18,15 +18,15 @@ class UserModel(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
-    account_id = db.Column(db.Integer, db.ForeignKey("account.id"), nullable=False)
+    account_id = db.Column(db.Integer, db.ForeignKey("account.id", ondelete="CASCADE"))
     account = db.relationship(
         AccountModel, backref="user_account", lazy=True, uselist=False
     )
-    cinema_id = db.Column(db.Integer, db.ForeignKey("cinema.id"))
+    cinema_id = db.Column(db.Integer, db.ForeignKey("cinema.id", ondelete="CASCADE"))
     cinema = db.relationship(
-        CinemaModel, backref="user_cinema", lazy=True, cascade="all,delete"
+        CinemaModel, backref="user_cinema", lazy=True
     )
-    location_id = db.Column(db.Integer, db.ForeignKey("location.id"), nullable=False)
+    location_id = db.Column(db.Integer, db.ForeignKey("location.id", ondelete="CASCADE"))
     location = db.relationship(
         LocationModel, backref="location", lazy=True
     )

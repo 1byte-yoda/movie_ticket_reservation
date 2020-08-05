@@ -24,14 +24,14 @@ class ReservationModel(db.Model):
     __tablename__ = "reservation"
 
     id = db.Column(db.Integer, primary_key=True)
-    head_count = db.Column(db.Integer)
+    head_count = db.Column(db.Integer, nullable=False)
     reserve_datetime = db.Column(db.DateTime, default=datetime.now)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
-    account_id = db.Column(db.Integer, db.ForeignKey("account.id"))
+    account_id = db.Column(db.Integer, db.ForeignKey("account.id"), nullable=False)
     account = db.relationship(AccountModel, backref="account", lazy=True)
-    payment_id = db.Column(db.Integer, db.ForeignKey("payment.id"))
+    payment_id = db.Column(db.Integer, db.ForeignKey("payment.id"), nullable=False)
     payment = db.relationship(PaymentModel, backref="payment", lazy=True, uselist=False)
 
     def __init__(self, head_count, account, payment, reserve_datetime=None, id=None):
