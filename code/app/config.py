@@ -1,12 +1,16 @@
 from datetime import timedelta
 import os
 
+from dotenv import load_dotenv
+
 
 BASEDIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+DB_PATH = os.path.join(BASEDIR, "db")
+load_dotenv(os.path.join(BASEDIR, ".flaskenv"))
 
 
 class Config:
-    SECRET_KEY = "change_this_later_bro"
+    SECRET_KEY = os.environ.get("SECRET_KEY")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     PROPAGATE_EXCEPTIONS = True
     JWT_EXPIRATION_DELTA = timedelta(days=3)
@@ -20,20 +24,22 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = "mysql://root:123456@localhost/anonymouse"
-    # or "sqlite:///" + os.path.join(BASEDIR, "db/data-dev.sqlite")
+    SQLALCHEMY_DATABASE_URI = os.path.join(
+        os.environ.get("SQLALCHEMY_DATABASE_URI"), os.environ.get("DB_DEV_NAME")
+    ) or "sqlite:///" + os.path.join(DB_PATH, "data-dev.sqlite")
 
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = "mysql://root:123456@localhost/testing"
-    # or "sqlite:///" + os.path.join(BASEDIR, "db/data-test.sqlite")
+    SQLALCHEMY_DATABASE_URI = os.path.join(
+        os.environ.get("SQLALCHEMY_DATABASE_URI"), os.environ.get("DB_TEST_NAME")
+    ) or "sqlite:///" + os.path.join(DB_PATH, "data-test.sqlite")
 
 
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DATABASE_URL"
-    ) or "sqlite:///" + os.path.join("data.sqlite")
+    ) or "sqlite:///" + os.path.join(DB_PATH, "data.sqlite")
 
 
 config = {
