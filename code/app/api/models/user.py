@@ -3,6 +3,7 @@ from datetime import datetime
 from db import db
 from .account import AccountModel
 from .cinema import CinemaModel
+from .location import LocationModel
 
 
 class UserModel(db.Model):
@@ -25,12 +26,20 @@ class UserModel(db.Model):
     cinema = db.relationship(
         CinemaModel, backref="user_cinema", lazy=True, cascade="all,delete"
     )
+    location_id = db.Column(db.Integer, db.ForeignKey("location.id"), nullable=False)
+    location = db.relationship(
+        LocationModel, backref="location", lazy=True
+    )
 
-    def __init__(self, first_name, last_name, contact_no, account):
+    def __init__(
+        self, first_name, last_name, contact_no, account, location, cinema=None
+    ):
         self.first_name = first_name
         self.last_name = last_name
         self.contact_no = contact_no
+        self.location = location
         self.account = account
+        self.cinema = cinema
 
     def json(self):
         """JSON representation of the UserModel."""
@@ -40,6 +49,7 @@ class UserModel(db.Model):
             "first_name": self.first_name,
             "last_name": self.last_name,
             "contact_no": self.contact_no,
+            "location": self.location.json()
         }
 
     @classmethod

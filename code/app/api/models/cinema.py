@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import List
 
 from db import db
-from .location import LocationModel
 
 
 class CinemaModel(db.Model):
@@ -15,16 +14,16 @@ class CinemaModel(db.Model):
     __tablename__ = "cinema"
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255))
-    open_time = db.Column(db.Time)
-    close_time = db.Column(db.Time)
+    name = db.Column(db.String(255), nullable=False)
+    open_time = db.Column(db.Time, nullable=False)
+    close_time = db.Column(db.Time, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
-
-    location_id = db.Column(db.Integer, db.ForeignKey("location.id"), nullable=False)
-    location = db.relationship(
-        LocationModel, backref="location", lazy=True
-    )
+    
+    def __init__(self, name, open_time, close_time):
+        self.name = name
+        self.open_time = open_time
+        self.close_time = close_time
 
     def json(self) -> dict:
         """JSON representation of the CinemaModel."""
@@ -32,8 +31,7 @@ class CinemaModel(db.Model):
             "id": self.id,
             "name": self.name,
             "open_time": self.open_time,
-            "close_time": self.close_time,
-            "location": self.location.json()
+            "close_time": self.close_time
         }
 
     @classmethod

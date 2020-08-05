@@ -15,3 +15,4 @@ USER_REGISTER_ROUTES = ["/api/user/register"]
 USER_ROUTES = ["/api/user/delete"]
 
 CINEMA_ROUTES = ["/api/cinema"]
+CINEMA_USER_ROUTES = ["/api/cinema/register", "/api/cinema/delete"]

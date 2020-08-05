@@ -30,9 +30,7 @@ class ScheduleModel(db.Model):
             "id": self.id,
             "play_datetime": self.play_datetime,
             "end_datetime": self.end_datetime,
-            "master_schedule": {
-                self.master_schedule.json()
-            }
+            "master_schedule": self.master_schedule.json()
         }
 
     @classmethod

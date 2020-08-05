@@ -6,6 +6,7 @@ from .cinema import CinemaSchema
 from .screen import ScreenSchema
 from .seat import SeatSchema
 from .movie import MovieSchema
+from .schedule import ScheduleSchema
 
 
 class SeatReservationPostSchema(Schema):
@@ -27,3 +28,4 @@ class SeatReservationSchema(Schema):
     screen = fields.Nested(ScreenSchema)
     seat = fields.Nested(SeatSchema)
     movie = fields.Nested(MovieSchema)
+    schedule = fields.Nested(ScheduleSchema)

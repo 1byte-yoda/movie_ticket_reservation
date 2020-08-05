@@ -1,12 +1,14 @@
+from datetime import timedelta
+
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
     jwt_required,
     jwt_optional,
-    get_raw_jwt,
     get_jwt_claims,
     get_jwt_identity,
     get_current_user,
+    get_raw_jwt
 )
 from flask_restful import Resource
 from flask import request
@@ -22,7 +24,6 @@ from .response_messages import (
     ACCOUNT_LOGGED_OUT_MESSAGE_201,
     INVALID_REQUEST_ADMIN_MESSAGE_401,
     INVALID_ALREADY_LOGIN_400,
-    ACCOUNT_DELETED_MESSAGE_202,
     ACCOUNT_UPDATED_MESSAGE_202,
 )
 from ..schemas.account import AccountSchema
@@ -40,13 +41,12 @@ class AccountRegisterResource(Resource):
 class AccountLoginResource(Resource):
     """Docstring here."""
 
-    account_schema = AccountSchema()
+    account_schema = AccountSchema(exclude=["type"])
 
     @classmethod
     @jwt_optional
     def post(cls):
         is_logged_in = get_jwt_identity()
-        print(get_jwt_identity())
         if is_logged_in:
             return ({"message": INVALID_ALREADY_LOGIN_400}, 400)
         account_data = request.get_json()
@@ -57,8 +57,12 @@ class AccountLoginResource(Resource):
         account = AccountModel.find_by_email(email=account_data["email"])
         if account and safe_str_cmp(account.password, account_data["password"]):
             user = UserModel.find_by_account_id(id=account.id)
-            access_token = create_access_token(identity=user, fresh=True)
-            refresh_token = create_refresh_token(identity=user)
+            access_token = create_access_token(
+                identity=user, fresh=True, expires_delta=timedelta(days=3)
+            )
+            refresh_token = create_refresh_token(
+                identity=user, expires_delta=timedelta(hours=1)
+            )
             return (
                 {"access_token": access_token, "refresh_token": refresh_token},
                 201,

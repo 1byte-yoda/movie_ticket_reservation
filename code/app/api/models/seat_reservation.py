@@ -42,20 +42,11 @@ class SeatReservationModel(db.Model):
             "id": self.id,
             "price": self.price,
             "reservation": self.reservation.json(),
-            "cinema": {
-                "id": self.movie_screen.screen.cinema.id,
-                "name": self.movie_screen.screen.cinema.name,
-                "open_time": self.movie_screen.screen.cinema.open_time,
-                "close_time": self.movie_screen.screen.cinema.close_time
-            },
+            "cinema": self.movie_screen.screen.cinema.json(),
             "screen": {"id": self.movie_screen.screen_id},
             "seat": {"id": self.seat_id},
-            "movie": {
-                "id": self.movie_screen.movie.id,
-                "name": self.movie_screen.movie.name,
-                "play_datetime": self.movie_screen.schedule.play_datetime,
-                "end_datetime": self.movie_screen.schedule.end_datetime,
-            },
+            "movie": self.movie_screen.movie.json(),
+            "schedule": self.movie_screen.schedule.json()
         }
 
     @classmethod

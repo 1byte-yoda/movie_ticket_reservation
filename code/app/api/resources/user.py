@@ -22,7 +22,7 @@ from ..schemas.account import AccountSchema
 class UserRegisterResource(Resource):
     """Contains the REST API endpoints for User Registration."""
 
-    user_schema = UserSchema()
+    user_schema = UserSchema(exclude=["cinema"])
 
     def post(cls):
         """POST method that handles the /api/user/register endpoint.
@@ -48,14 +48,19 @@ class UserRegisterResource(Resource):
             contact_no=user_data["contact_no"],
             account=new_account
         )
-        user.save_to_db()
+        try:
+            user.save_to_db()
+        except:
+            db.session.rollback()
+            db.session.flush()
+            return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)
         return {"message": ACCOUNT_CREATED_MESSAGE_201}, 201
 
 
 class UserResource(Resource):
     """Contains the REST API endpoints for User in general."""
 
-    account_schema = AccountSchema()
+    account_schema = AccountSchema(only={"email"})
 
     @classmethod
     @jwt_required
