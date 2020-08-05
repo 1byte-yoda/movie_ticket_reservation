@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from sqlalchemy.types import CHAR
+
 from db import db
 from .barangay import BarangayModel
 
@@ -14,6 +16,8 @@ class LocationModel(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     barangay_id = db.Column(db.Integer, db.ForeignKey("barangay.id"), nullable=False)
     barangay = db.relationship(BarangayModel, backref="barangay", lazy=True)
+    longitude = db.Column(CHAR(16), nullable=False)
+    latitude = db.Column(CHAR(16), nullable=False)
 
     def __init__(self, barangay_id):
         self.barangay_id = barangay_id
