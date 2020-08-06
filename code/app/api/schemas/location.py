@@ -8,3 +8,5 @@ class LocationSchema(Schema):
 
     id = fields.Int()
     barangay = fields.Nested(BarangaySchema, required=True)
+    longitude = fields.String(required=True)
+    latitude = fields.String(required=True)

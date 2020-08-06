@@ -15,6 +15,7 @@ from .api.resources.account import (
 )
 from .api.resources.user import UserRegisterResource, UserResource
 from .api.resources.cinema import CinemaResource, CinemaUserResourse
+from .api.resources.screen import ScreenListResource, ScreenResource
 from .authenticate import jwt
 from .routes import (
     SEAT_RESERVATION_LIST_ROUTES,
@@ -25,7 +26,9 @@ from .routes import (
     ACCOUNT_LOGIN_ROUTES,
     ACCOUNT_LOGOUT_ROUTES,
     CINEMA_ROUTES,
-    CINEMA_USER_ROUTES
+    CINEMA_USER_ROUTES,
+    SCREEN_LIST_ROUTES,
+    SCREEN_ROUTES
 )
 from db import db
 from app.config import config
@@ -49,6 +52,8 @@ def create_app(*, config_name="default") -> Flask:
     api.add_resource(AccountResource, *ACCOUNT_ROUTES)
     api.add_resource(CinemaResource, *CINEMA_ROUTES)
     api.add_resource(CinemaUserResourse, *CINEMA_USER_ROUTES)
+    api.add_resource(ScreenListResource, *SCREEN_LIST_ROUTES)
+    api.add_resource(ScreenResource, *SCREEN_ROUTES)
 
     config[config_name].init_app(app=app)
     api.init_app(app=app)

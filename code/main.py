@@ -8,6 +8,7 @@ from app.api.models.location import LocationModel
 from app.api.models.barangay import BarangayModel
 from app.api.models.city import CityModel
 from app.api.models.province import ProvinceModel
+from app.api.models.seat import SeatListModel
 
 
 app = create_app()
@@ -28,5 +29,6 @@ def make_shell_context():
         LocationModel=LocationModel,
         BarangayModel=BarangayModel,
         CityModel=CityModel,
-        ProvinceModel=ProvinceModel
+        ProvinceModel=ProvinceModel,
+        SeatListModel=SeatListModel
     )

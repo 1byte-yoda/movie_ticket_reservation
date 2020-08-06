@@ -19,8 +19,10 @@ class LocationModel(db.Model):
     longitude = db.Column(CHAR(16), nullable=False)
     latitude = db.Column(CHAR(16), nullable=False)
 
-    def __init__(self, barangay_id):
+    def __init__(self, barangay_id, longitude, latitude):
         self.barangay_id = barangay_id
+        self.longitude = longitude
+        self.latitude = latitude
 
     def json(self) -> dict:
         """JSON representation of the LocationModel."""

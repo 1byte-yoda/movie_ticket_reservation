@@ -36,8 +36,8 @@ class CinemaResource(Resource):
 
     @classmethod
     @jwt_required
-    def get(cls):
-        """GET method that handles the /api/cinema endpoint.
+    def get(cls, cinema_id: int):
+        """GET method that handles the /api/cinema/<int:cinema_id> endpoint.
 
         Description
         -----------
@@ -48,6 +48,8 @@ class CinemaResource(Resource):
         if claims:
             if safe_str_cmp(claims.get("type"), "admin"):
                 user = get_current_user()
+                if not user.cinema_id == cinema_id:
+                    return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
                 cinema = CinemaModel.find_by_id(id=user.cinema_id)
                 if cinema:
                     return ({"cinema": cls.cinema_schema.dump(cinema.json())}, 200)
@@ -75,14 +77,15 @@ class CinemaUserResourse(Resource):
         user_data = request.get_json()
         try:
             user_data = cls.user_schema.load(user_data)
-            print(user_data)
         except ValidationError as err:
             return {"message": err.messages}
         if AccountModel.find_by_email(email=user_data["account"]["email"]):
             return {"message": ACCOUNT_EXISTS_MESSAGE_400}, 400
         new_account = AccountModel(**user_data["account"])
         new_location = LocationModel(
-            barangay_id=user_data["location"]["barangay"]["id"]
+            barangay_id=user_data["location"]["barangay"]["id"],
+            longitude=user_data["location"]["longitude"],
+            latitude=user_data["location"]["latitude"]
         )
         new_cinema = CinemaModel(**user_data["cinema"])
         new_cinema_user = UserModel(
@@ -95,7 +98,8 @@ class CinemaUserResourse(Resource):
         )
         try:
             new_cinema_user.save_to_db()
-        except:
+        except Exception as e:
+            print(e)
             db.session.rollback()
             db.session.flush()
             return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)

@@ -31,3 +31,10 @@ MOVIE_SCREEN_NOT_FOUND_MESSAGE_404 = "movie-screen-schedule combination not foun
 
 # CINEMA
 CINEMA_NOT_FOUND_404 = "Cinema not found."
+
+
+# SCREEN
+SCREEN_ADDED_201 = "Screen created successfully."
+SCREEN_EXISTS_400 = "Screen with that name already exists!"
+SCREEN_NOT_FOUND_404 = "Screen not found!"
+SCREEN_DELETED_201 = "Screen deleted successfully."

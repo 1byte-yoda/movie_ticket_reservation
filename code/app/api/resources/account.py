@@ -20,7 +20,6 @@ from ..models.account import AccountModel
 from ..models.user import UserModel
 from .response_messages import (
     ACCOUNT_NOT_FOUND_MESSAGE_404,
-    ACCOUNT_EXISTS_MESSAGE_400,
     INVALID_ACCOUNT_MESSAGE_401,
     ACCOUNT_LOGGED_OUT_MESSAGE_201,
     INVALID_REQUEST_ADMIN_MESSAGE_401,

@@ -15,12 +15,19 @@ class ScreenModel(db.Model):
     __tablename__ = "screen"
 
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False, unique=True)
     capacity = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
     cinema_id = db.Column(db.Integer, db.ForeignKey("cinema.id"), nullable=False)
     cinema = db.relationship(CinemaModel, backref="cinema", lazy=True)
+    seat = db.relationship("SeatModel", backref="screen_seat", lazy=True)
+
+    def __init__(self, name, capacity, cinema):
+        self.name = name
+        self.capacity = capacity
+        self.cinema = cinema
 
     def json(self):
         """JSON representation of the ScreenModel."""
@@ -35,9 +42,15 @@ class ScreenModel(db.Model):
         """Find a screen in the database by id."""
         return cls.query.filter_by(id=id).first()
 
-    def save_to_db(self):
+    @classmethod
+    def find_by_name(cls, name: str) -> "ScreenModel":
+        """Find a screen in the database by name."""
+        return cls.query.filter_by(name=name).first()
+
+    def save_to_db(self, seats: int):
         """Save a new screen in the database."""
         db.session.add(self)
+        db.session.add_all(seats)
         db.session.commit()
 
     def update(self, update_data: dict):
