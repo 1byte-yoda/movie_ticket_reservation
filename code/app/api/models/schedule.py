@@ -58,8 +58,6 @@ class ScheduleModel(db.Model):
     @classmethod
     def find_conflicts(cls, screen_id, launch_date, phase_out_date, scheds):
         """Find a schedule in the database by screen_id its schedule."""
-
-        # schedule = cls.query.from_statement(db.text(SELECT_CONFLICT_SCHEDULE_QUERY)).all()
         for sched in scheds:
             yield (cls.query.from_statement(db.text(
                 SELECT_CONFLICT_SCHEDULE_QUERY.format(
@@ -86,3 +84,8 @@ class ScheduleModel(db.Model):
         """Remove a schedule from the database."""
         db.session.delete(self)
         db.session.commit()
+
+    @classmethod
+    def count_instances(cls, master_schedule_id: int) -> list:
+        """Count instances of a master_schedule_id."""
+        return cls.query.filter_by(master_schedule_id=master_schedule_id).count()

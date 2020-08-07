@@ -67,12 +67,6 @@ class MovieScreenModel(db.Model):
         """Save a new movie-screen in the database."""
         db.session.add(self)
         db.session.commit()
-    
-    @classmethod
-    def save_all(cls, movie_screens: list):
-        """Save all MovieScreenModel instances into the database."""
-        db.session.add_all(movie_screens)
-        db.session.commit()
 
     def update(self, update_data: dict):
         """Update a movie-screen in the database."""
@@ -95,6 +89,12 @@ class MovieScreenListModel(MovieScreenModel):
     """
 
     @classmethod
+    def save_all(cls, movie_screens: list):
+        """Save all MovieScreenModel instances into the database."""
+        db.session.add_all(movie_screens)
+        db.session.commit()
+
+    @classmethod
     def find_showing(cls):
         """Find all movie_screen_id of showing movies.
 
@@ -109,3 +109,7 @@ class MovieScreenListModel(MovieScreenModel):
             ms.schedule.end_datetime.strftime("%Y-%m-%d %H:%M:%S")
         ), movie_screen)
         return list(now_showing)
+    
+    @classmethod
+    def find_all_owned(cls, screen_id: int) -> MovieScreenModel:
+        return cls.query.filter_by(screen_id=screen_id).all()

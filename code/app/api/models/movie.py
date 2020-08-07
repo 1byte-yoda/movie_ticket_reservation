@@ -34,7 +34,6 @@ class MovieModel(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "price": self.price,
             "description": self.description,
             "duration": self.duration,
             "release_date": self.release_date,

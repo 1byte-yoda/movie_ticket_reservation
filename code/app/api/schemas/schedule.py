@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time
 
 from marshmallow import (
     Schema,
@@ -27,8 +27,10 @@ class ScheduleSchema(Schema):
 
     @pre_dump
     def dump_serialize_time(self, in_data, **kwargs):
-        in_data["play_time"] = (datetime.min + in_data["play_time"]).time()
-        in_data["end_time"] = (datetime.min + in_data["end_time"]).time()
+        if not isinstance(in_data["play_time"], time):
+            in_data["play_time"] = (datetime.min + in_data["play_time"]).time()
+        if not isinstance(in_data["end_time"], time):
+            in_data["end_time"] = (datetime.min + in_data["end_time"]).time()
         return in_data
 
     @validates_schema

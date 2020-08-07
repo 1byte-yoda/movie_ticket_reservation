@@ -33,6 +33,7 @@ class ScreenModel(db.Model):
         """JSON representation of the ScreenModel."""
         return {
             "id": self.id,
+            "name": self.name,
             "capacity": self.capacity,
             "cinema": self.cinema.json()
         }

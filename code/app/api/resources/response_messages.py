@@ -26,8 +26,9 @@ RESERVATION_NOT_FOUND_MESSAGE_404 = "Reservation id not found."
 
 
 # MOVIE_SCREEN
-MOVIE_SCREEN_NOT_FOUND_MESSAGE_404 = "movie-screen-schedule combination not found."
-MOVIE_SCREEN_ADDED_201 = "Movie Screen added sucessfully."
+MOVIE_SCREEN_NOT_FOUND_MESSAGE_404 = "Movie Screen not found."
+MOVIE_SCREENS_ADDED_201 = "Movie Screen(s) added sucessfully."
+MOVIE_SCREEN_DELETED_201 = "Movie Screen deleted sucessfully."
 
 
 # CINEMA

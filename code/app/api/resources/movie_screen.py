@@ -7,11 +7,13 @@ from .response_messages import (
     INVALID_REQUEST_ADMIN_MESSAGE_401,
     SCREEN_NOT_FOUND_404,
     SCHEDULE_CONFLICT_400,
-    MOVIE_SCREEN_ADDED_201,
+    MOVIE_SCREENS_ADDED_201,
+    MOVIE_SCREEN_NOT_FOUND_MESSAGE_404,
+    MOVIE_SCREEN_DELETED_201,
     UNKNOWN_ERROR_MESSAGE_500
 )
 from ..models.screen import ScreenModel
-from ..models.movie_screen import MovieScreenModel
+from ..models.movie_screen import MovieScreenModel, MovieScreenListModel
 from ..models.movie import MovieModel
 from ..models.master_schedule import MasterScheduleModel
 from ..models.schedule import ScheduleModel
@@ -29,11 +31,40 @@ class MovieScreenResource(Resource):
 
     ms_schema = MovieScreenSchema()
 
+    @classmethod
+    @jwt_required
+    def get(cls, cinema_id: int, screen_id: int, movie_screen_id: int):
+        """GET method that pulls a particular movie product.
+
+        path : /api/cinema/<int:cinema_id>/screen/<int:screen_id>/movie-screen/<int:movie_screen_id>
+
+        Description
+        -----------
+        This will parse a movie-screen for a given screen
+        """
+        claims = get_jwt_claims()
+        if claims:
+            if safe_str_cmp(claims.get("type"), "admin"):
+                user = get_current_user()
+                if user.cinema_id != cinema_id:
+                    return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
+
+                screen = ScreenModel.find_by_id_cinema(
+                    id=screen_id, cinema_id=cinema_id
+                )
+                if not screen:
+                    return ({"message": SCREEN_NOT_FOUND_404}, 404)
+                movie_screen = MovieScreenModel.find_by_id(id=movie_screen_id)
+                if not movie_screen:
+                    return ({"message": MOVIE_SCREEN_NOT_FOUND_MESSAGE_404}, 404)
+                return ({"payload": cls.ms_schema.dump(movie_screen.json())}, 200)
+        return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
+
     @jwt_required
     def post(cls, cinema_id: int, screen_id: int):
         """POST method that handles the creation of a movie product.
 
-        path : /api/cinema/<int:cinema_id>/screen/<int:screen_id>/movie/add
+        path : /api/cinema/<int:cinema_id>/screen/<int:screen_id>/movie-screen/add
 
         Description
         -----------
@@ -53,6 +84,7 @@ class MovieScreenResource(Resource):
                 if not screen:
                     return ({"message": SCREEN_NOT_FOUND_404}, 404)
                 movie_screen_data = cls.ms_schema.load(request.get_json())
+                price = movie_screen_data["price"]
                 movie_data = movie_screen_data["movie"]
                 schedules_data = movie_screen_data["schedules"]
                 master_schedule_data = movie_screen_data["master_schedule"]
@@ -88,14 +120,99 @@ class MovieScreenResource(Resource):
                         )
                     )
                     movie_screens.append(
-                        MovieScreenModel(movie=movie, screen=screen, schedule=schedule)
+                        MovieScreenModel(
+                            movie=movie, screen=screen, schedule=schedule, price=price)
                     )
                 try:
-                    MovieScreenModel.save_all(movie_screens)
-                except Exception as err:
-                    print(err)
+                    MovieScreenListModel.save_all(movie_screens)
+                except:
                     db.session.rollback()
                     db.session.flush()
                     return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)
-                return ({"message": MOVIE_SCREEN_ADDED_201}, 201)
+                return ({"message": MOVIE_SCREENS_ADDED_201}, 201)
+        return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
+
+    @classmethod
+    @jwt_required
+    def delete(cls, cinema_id: int, screen_id: int):
+        """DELETE method that deletes a deployed movie-screen.
+
+        path : /api/cinema/<int:cinema_id>/screen/<int:screen_id>/movie-screen/delete
+
+        Description
+        -----------
+        This will delete a movie for a give screen.
+        """
+        claims = get_jwt_claims()
+        if claims:
+            if safe_str_cmp(claims.get("type"), "admin"):
+                user = get_current_user()
+                if user.cinema_id != cinema_id:
+                    return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
+                _ms_schema = MovieScreenSchema(only=["id"])
+                screen = ScreenModel.find_by_id_cinema(
+                    id=screen_id, cinema_id=cinema_id
+                )
+                if not screen:
+                    return ({"message": SCREEN_NOT_FOUND_404}, 404)
+                movie_screen_id = _ms_schema.load(request.get_json())["id"]
+                movie_screen = MovieScreenModel.find_by_id(id=movie_screen_id)
+                if not movie_screen:
+                    return ({"message": MOVIE_SCREEN_NOT_FOUND_MESSAGE_404}, 404)
+                schedule = movie_screen.schedule
+                master_schedule_id = schedule.master_schedule_id
+                master_schedule_dependents = ScheduleModel.count_instances(
+                    master_schedule_id=master_schedule_id
+                )
+                db.session.delete(movie_screen)
+                db.session.delete(schedule)
+                if master_schedule_dependents == 1:
+                    db.session.delete(schedule.master_schedule)
+                try:
+                    db.session.commit()
+                except Exception as e:
+                    print(e)
+                    db.session.rollback()
+                    db.session.flush()
+                    return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)
+                return ({"message": MOVIE_SCREEN_DELETED_201}, 201)
+        return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
+
+
+class MovieScreenListResource(MovieScreenResource):
+    """Contains the REST API paths for Movie-Screen-List transactions.
+
+    Description
+    -----------
+    Inherits MovieScreenReource to work with list of MovieScreens.
+    """
+
+    ms_schema = MovieScreenSchema()
+
+    @classmethod
+    @jwt_required
+    def get(cls, cinema_id: int, screen_id: int):
+        """GET method that pulls all of the movie products.
+
+        path : /api/cinema/<int:cinema_id>/screen/<int:screen_id>/movie-screens
+
+        Description
+        -----------
+        This will parse all of the deployed movies for the given screen.
+        """
+        claims = get_jwt_claims()
+        if claims:
+            if safe_str_cmp(claims.get("type"), "admin"):
+                user = get_current_user()
+                if user.cinema_id != cinema_id:
+                    return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
+
+                screen = ScreenModel.find_by_id_cinema(
+                    id=screen_id, cinema_id=cinema_id
+                )
+                if not screen:
+                    return ({"message": SCREEN_NOT_FOUND_404}, 404)
+                movie_screens = MovieScreenListModel.find_all_owned(screen_id=screen_id)
+                movie_screens = list(map(lambda ms: ms.json(), movie_screens))
+                return ({"payload": cls.ms_schema.dump(movie_screens, many=True)}, 200)
         return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
