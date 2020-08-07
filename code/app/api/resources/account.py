@@ -54,7 +54,11 @@ class AccountLoginResource(Resource):
                 identity=user, expires_delta=timedelta(hours=1)
             )
             return (
-                {"access_token": access_token, "refresh_token": refresh_token},
+                {
+                    "access_token": access_token,
+                    "refresh_token": refresh_token,
+                    "claims_id": user.cinema_id
+                },
                 201,
             )
         return {"message": INVALID_ACCOUNT_MESSAGE_401}, 401

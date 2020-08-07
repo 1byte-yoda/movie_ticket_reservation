@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from sqlalchemy.types import FLOAT
+
 from db import db
 from .screen import ScreenModel
 from .movie import MovieModel
@@ -19,7 +21,7 @@ class MovieScreenModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
-
+    price = db.Column(FLOAT(6, 2), nullable=False)
     movie_id = db.Column(db.Integer, db.ForeignKey("movie.id"), nullable=False)
     movie = db.relationship(MovieModel, backref="movie", lazy="joined", join_depth=1)
     screen_id = db.Column(db.Integer, db.ForeignKey("screen.id"), nullable=False)
@@ -30,10 +32,17 @@ class MovieScreenModel(db.Model):
     schedule = db.relationship(ScheduleModel, backref="schedule", lazy=True)
     db.UniqueConstraint(movie_id, screen_id, schedule_id,)
 
+    def __init__(self, price, movie, screen, schedule):
+        self.price = price
+        self.movie = movie
+        self.screen = screen
+        self.schedule = schedule
+
     def json(self):
         """JSON representation of the MovieModel."""
         return {
             "id": self.id,
+            "price": self.price,
             "movie": self.movie.json(),
             "screen": self.screen.json(),
             "schedule": self.schedule.json()
@@ -57,6 +66,12 @@ class MovieScreenModel(db.Model):
     def save_to_db(self):
         """Save a new movie-screen in the database."""
         db.session.add(self)
+        db.session.commit()
+    
+    @classmethod
+    def save_all(cls, movie_screens: list):
+        """Save all MovieScreenModel instances into the database."""
+        db.session.add_all(movie_screens)
         db.session.commit()
 
     def update(self, update_data: dict):

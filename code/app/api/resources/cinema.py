@@ -30,14 +30,16 @@ from ..schemas.account import AccountSchema
 
 
 class CinemaResource(Resource):
-    """Contains the REST API endpoints for a Cinema."""
+    """Contains the REST API paths for a Cinema."""
 
     cinema_schema = CinemaSchema()
 
     @classmethod
     @jwt_required
     def get(cls, cinema_id: int):
-        """GET method that handles the /api/cinema/<int:cinema_id> endpoint.
+        """GET method that pulls the profile details of the current Cinema Manager.
+
+        path : /api/cinema/<int:cinema_id>
 
         Description
         -----------
@@ -58,14 +60,16 @@ class CinemaResource(Resource):
 
 
 class CinemaUserResourse(Resource):
-    """Contains the REST API endpoint for Cinema-User transactions."""
+    """Contains the REST API paths for Cinema-User transactions."""
 
     user_schema = UserSchema()
 
     @classmethod
     @jwt_optional
     def post(cls):
-        """POST method that handles the /api/cinema/register endpoint.
+        """POST method that handles the creation of a cinema.
+
+        path : /api/cinema/register
 
         Description
         -----------
@@ -111,11 +115,13 @@ class CinemaUserResourse(Resource):
     @classmethod
     @jwt_required
     def delete(self):
-        """DELETE method that handles the /api/cinema/delete endpoint.
+        """DELETE method that handles the deletion of a cinema user.
+
+        path : /api/cinema/delete
 
         Description
         -----------
-        FOR TESTING ONLY
+        FOR TESTING ONLY (super_admin)
         This will delete a row in the related tables: cinema, location, user, account
         """
         claims = get_jwt_claims()

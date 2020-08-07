@@ -27,6 +27,7 @@ RESERVATION_NOT_FOUND_MESSAGE_404 = "Reservation id not found."
 
 # MOVIE_SCREEN
 MOVIE_SCREEN_NOT_FOUND_MESSAGE_404 = "movie-screen-schedule combination not found."
+MOVIE_SCREEN_ADDED_201 = "Movie Screen added sucessfully."
 
 
 # CINEMA
@@ -38,3 +39,8 @@ SCREEN_ADDED_201 = "Screen created successfully."
 SCREEN_EXISTS_400 = "Screen with that name already exists!"
 SCREEN_NOT_FOUND_404 = "Screen not found!"
 SCREEN_DELETED_201 = "Screen deleted successfully."
+SCREEN_UPDATED_201 = "Screen updated successfully."
+
+
+# SCHEDULES
+SCHEDULE_CONFLICT_400 = "Conflicting schedules found in the system."

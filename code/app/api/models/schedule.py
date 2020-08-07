@@ -2,6 +2,8 @@ from datetime import datetime
 
 from db import db
 from .master_schedule import MasterScheduleModel
+from .screen import ScreenModel
+from .customized_queries.schedule import SELECT_CONFLICT_SCHEDULE_QUERY
 
 
 class ScheduleModel(db.Model):
@@ -16,22 +18,35 @@ class ScheduleModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
-    play_datetime = db.Column(db.DateTime, nullable=False)
-    end_datetime = db.Column(db.DateTime, nullable=False)
+    play_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
+    screen_id = db.Column(
+        db.Integer, db.ForeignKey("screen.id"), nullable=False
+    )
+    screen = db.relationship(
+        ScreenModel, backref="schedule_screen", lazy=True
+    )
     master_schedule_id = db.Column(
         db.Integer, db.ForeignKey("master_schedule.id"), nullable=False
     )
     master_schedule = db.relationship(
         MasterScheduleModel, backref="master_schedule", lazy=True
     )
-    db.UniqueConstraint(master_schedule_id, play_datetime, end_datetime,)
+    db.UniqueConstraint(screen_id, master_schedule_id, play_time, end_time,)
+
+    def __init__(self, play_time, end_time, screen, master_schedule):
+        self.play_time = play_time
+        self.end_time = end_time
+        self.screen = screen
+        self.master_schedule = master_schedule
 
     def json(self):
         """JSON representation of the ScheduleModel."""
         return {
             "id": self.id,
-            "play_datetime": self.play_datetime,
-            "end_datetime": self.end_datetime,
+            "play_time": self.play_time,
+            "end_time": self.end_time,
+            "screen": self.screen.json(),
             "master_schedule": self.master_schedule.json()
         }
 
@@ -39,6 +54,21 @@ class ScheduleModel(db.Model):
     def find_by_id(cls, id: int) -> "ScheduleModel":
         """Find a schedule in the database by id."""
         return cls.query.filter_by(id=id).first()
+
+    @classmethod
+    def find_conflicts(cls, screen_id, launch_date, phase_out_date, scheds):
+        """Find a schedule in the database by screen_id its schedule."""
+
+        # schedule = cls.query.from_statement(db.text(SELECT_CONFLICT_SCHEDULE_QUERY)).all()
+        for sched in scheds:
+            yield (cls.query.from_statement(db.text(
+                SELECT_CONFLICT_SCHEDULE_QUERY.format(
+                    screen_id=screen_id,
+                    launch_date=launch_date,
+                    phase_out_date=phase_out_date,
+                    **sched
+                )
+            )).first())
 
     def save_to_db(self):
         """Save a new schedule in the database."""

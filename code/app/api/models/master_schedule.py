@@ -9,22 +9,31 @@ class MasterScheduleModel(db.Model):
     __tablename__ = "master_schedule"
 
     id = db.Column(db.Integer, primary_key=True)
-    launch_datetime = db.Column(db.DateTime, nullable=False)
-    phase_out_datetime = db.Column(db.DateTime, nullable=False)
+    launch_date = db.Column(db.Date, nullable=False)
+    phase_out_date = db.Column(db.Date, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    db.UniqueConstraint(launch_date, phase_out_date)
+
+    def __init__(self, launch_date, phase_out_date):
+        self.launch_date = launch_date
+        self.phase_out_date = phase_out_date
 
     def json(self):
         return {
             "id": self.id,
-            "launch_datetime": self.launch_datetime,
-            "phase_out_datetime": self.phase_out_datetime
+            "launch_date": self.launch_date,
+            "phase_out_date": self.phase_out_date
         }
 
     @classmethod
     def find_by_id(cls, id: int) -> "MasterScheduleModel":
         """Find a master schedule in the database by id."""
         return cls.query.filter_by(id=id).first()
+
+    @classmethod
+    def find_by_dates(cls, dates: dict) -> "MasterScheduleModel":
+        return cls.query.filter_by(**dates).first()
 
     def save_to_db(self):
         """Save a new master schedule in the database."""

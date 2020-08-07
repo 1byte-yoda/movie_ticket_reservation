@@ -1,7 +1,6 @@
 from flask_restful import Resource, request
 from flask_jwt_extended import jwt_required, get_jwt_claims, get_current_user
 from werkzeug.security import safe_str_cmp
-from sqlalchemy import func
 
 from .response_messages import (
     INVALID_REQUEST_ADMIN_MESSAGE_401,
@@ -9,7 +8,8 @@ from .response_messages import (
     SCREEN_ADDED_201,
     SCREEN_EXISTS_400,
     SCREEN_NOT_FOUND_404,
-    SCREEN_DELETED_201
+    SCREEN_DELETED_201,
+    SCREEN_UPDATED_201
 )
 from ..models.seat import SeatModel, SeatListModel
 from ..models.screen import ScreenListModel, ScreenModel
@@ -54,7 +54,10 @@ class ScreenResource(Resource):
                     db.session.rollback()
                     db.session.flush()
                     return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)
-                return ({"message": SCREEN_ADDED_201}, 201)
+                return ({
+                    "message": SCREEN_ADDED_201,
+                    "screen": screen_schema.dump(screen.json())
+                }, 201)
         return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
     
     @jwt_required
@@ -126,7 +129,7 @@ class ScreenResource(Resource):
                     db.session.rollback()
                     db.session.flush()
                     return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)
-                return ({"message": SCREEN_ADDED_201}, 201)
+                return ({"message": SCREEN_UPDATED_201}, 201)
         return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
 
     @jwt_required

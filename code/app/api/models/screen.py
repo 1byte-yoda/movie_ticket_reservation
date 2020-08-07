@@ -43,6 +43,11 @@ class ScreenModel(db.Model):
         return cls.query.filter_by(id=id).first()
 
     @classmethod
+    def find_by_id_cinema(cls, cinema_id: int, id: int) -> "ScreenModel":
+        """Find a screen in the database by id and cinema_id."""
+        return cls.query.filter_by(id=id, cinema_id=cinema_id).first()
+
+    @classmethod
     def find_by_name(cls, name: str) -> "ScreenModel":
         """Find a screen in the database by name."""
         return cls.query.filter_by(name=name).first()
