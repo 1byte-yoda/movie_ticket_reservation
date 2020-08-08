@@ -21,7 +21,7 @@ from ..schemas.movie_screen import MovieScreenSchema
 
 
 class MovieScreenResource(Resource):
-    """Contains the REST API paths for Movie-Screen transactions.
+    """Contains the REST API methods for Movie-Screen transactions.
 
     Description
     -----------
@@ -68,7 +68,7 @@ class MovieScreenResource(Resource):
 
         Description
         -----------
-        This will create a new entry in the movie_screen, movie,
+        This will create a new entry in the ff. tables: movie_screen, movie,
         schedule, and master_schedule table.
         """
         claims = get_jwt_claims()
@@ -180,7 +180,7 @@ class MovieScreenResource(Resource):
 
 
 class MovieScreenListResource(MovieScreenResource):
-    """Contains the REST API paths for Movie-Screen-List transactions.
+    """Contains the REST API methods for Movie-Screen-List transactions.
 
     Description
     -----------
