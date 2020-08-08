@@ -21,7 +21,7 @@ from ..schemas.movie_screen import MovieScreenSchema
 
 
 class MovieScreenResource(Resource):
-    """Contains the REST API paths for Movie-Screen transactions.
+    """Contains the REST API methods for Movie-Screen transactions.
 
     Description
     -----------
@@ -68,7 +68,7 @@ class MovieScreenResource(Resource):
 
         Description
         -----------
-        This will create a new entry in the movie_screen, movie,
+        This will create a new entry in the ff. tables: movie_screen, movie,
         schedule, and master_schedule table.
         """
         claims = get_jwt_claims()
@@ -134,6 +134,25 @@ class MovieScreenResource(Resource):
 
     @classmethod
     @jwt_required
+    def put(cls, cinema_id: int, screen_id: int, movie_screen_id: int):
+        """PUT method that modifies a particular movie-screen.
+
+        path : /api/cinema/<int:cinema_id>/screen/<int:screen_id>/movie-screen/<int:movie_screen_id>/edit
+
+        Description
+        -----------
+        This will update a movie-screen product in the database.
+        """
+        claims = get_jwt_claims()
+        if claims:
+            if not safe_str_cmp(claims.get("type"), "admin"):
+                return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
+            user = get_current_user()
+            if user.cinema_id != cinema_id:
+                return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
+            
+    @classmethod
+    @jwt_required
     def delete(cls, cinema_id: int, screen_id: int):
         """DELETE method that deletes a deployed movie-screen.
 
@@ -180,7 +199,7 @@ class MovieScreenResource(Resource):
 
 
 class MovieScreenListResource(MovieScreenResource):
-    """Contains the REST API paths for Movie-Screen-List transactions.
+    """Contains the REST API methods for Movie-Screen-List transactions.
 
     Description
     -----------
