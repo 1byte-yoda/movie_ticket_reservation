@@ -1,5 +1,7 @@
 from marshmallow import Schema, fields, validates_schema, ValidationError, post_load
 
+from .response_messages import PHASE_OUT_GT_LAUNCH_DATE
+
 
 class MasterScheduleSchema(Schema):
     id = fields.Int()
@@ -10,7 +12,7 @@ class MasterScheduleSchema(Schema):
     def validate_schedule_date(self, in_data, **kwargs):
         errors = {}
         if in_data["launch_date"] > in_data["phase_out_date"]:
-            errors["phase_out_date"] = "phase_out_date must be later than launch_date."
+            errors["phase_out_date"] = PHASE_OUT_GT_LAUNCH_DATE
         if errors:
             raise ValidationError(errors)
 
