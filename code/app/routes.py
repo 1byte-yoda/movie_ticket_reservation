@@ -20,7 +20,8 @@ SCREEN_LIST_ROUTES = ["/api/cinema/<int:cinema_id>/screens"]
 SCREEN_ROUTES = [
     "/api/cinema/<int:cinema_id>/screen/add",
     "/api/cinema/<int:cinema_id>/screen/<int:screen_id>/delete",
-    "/api/cinema/<int:cinema_id>/screen/<int:screen_id>/edit"
+    "/api/cinema/<int:cinema_id>/screen/<int:screen_id>/edit",
+    "/api/cinema/<int:cinema_id>/screen/<int:screen_id>"
 ]
 
 MOVIE_SCREEN_ROUTES = [

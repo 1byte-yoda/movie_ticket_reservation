@@ -18,13 +18,38 @@ from db import db
 
 
 SCREEN_COLUMN_SEAT_SIZE = 20
-FIRST_SEAT_LETTER = "A"
 LAST_SEAT_LETTER = "J"
 
 
 class ScreenResource(Resource):
+
+    screen_schema = ScreenSchema()
+
     @jwt_required
-    def post(self, cinema_id: int):
+    def get(cls, cinema_id: int, screen_id: int):
+        """GET method that pulls a particular screen.
+
+        path: /api/cinema/<int:cinema_id>/screen/<int:screen_id>
+
+        Description:
+        -----------
+        This will parse a screen object in the database, given
+        the current cinema_id and the screen_id.
+        """
+        claims = get_jwt_claims()
+        if claims:
+            if safe_str_cmp(claims.get("type"), "admin"):
+                user = get_current_user()
+                if user.cinema_id != cinema_id:
+                    return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
+                screen = ScreenModel.find_by_id_cinema(cinema_id=cinema_id, id=screen_id)
+                if screen:
+                    return ({"payload": cls.screen_schema.dump(screen)}, 200)
+                return ({"message": SCREEN_NOT_FOUND_404}, 404)
+        return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
+
+    @jwt_required
+    def post(cls, cinema_id: int):
         """POST method that handles the creation of a screen.
 
         path : /api/cinema/<int:cinema_id>/screen/add
@@ -34,7 +59,6 @@ class ScreenResource(Resource):
         This will add a screen and its corresponding seats for the current logged in
         user.
         """
-        screen_schema = ScreenSchema()
         claims = get_jwt_claims()
         if claims:
             if safe_str_cmp(claims.get("type"), "admin"):
@@ -42,7 +66,7 @@ class ScreenResource(Resource):
                 if not user.cinema_id == cinema_id:
                     return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
                 screen_data = request.get_json()
-                screen_data = screen_schema.load(screen_data)
+                screen_data = cls.screen_schema.load(screen_data)
                 if ScreenModel.find_by_name(name=screen_data["name"]):
                     return ({"message": SCREEN_EXISTS_400}, 400)
                 screen_data["cinema"] = user.cinema
@@ -56,12 +80,12 @@ class ScreenResource(Resource):
                     return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)
                 return ({
                     "message": SCREEN_ADDED_201,
-                    "screen": screen_schema.dump(screen.json())
+                    "screen": cls.screen_schema.dump(screen.json())
                 }, 201)
         return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
-    
+
     @jwt_required
-    def put(self, cinema_id: int, screen_id: int):
+    def put(cls, cinema_id: int, screen_id: int):
         """PUT method that handles the attribute updates for a screen.
 
         path : /api/cinema/<int:cinema_id>/screen/<int:screen_id>/edit
@@ -71,7 +95,6 @@ class ScreenResource(Resource):
         This will modify a screen and its corresponding seats for the current logged in
         user.
         """
-        screen_schema = ScreenSchema()
         claims = get_jwt_claims()
         if claims:
             if safe_str_cmp(claims.get("type"), "admin"):
@@ -82,7 +105,7 @@ class ScreenResource(Resource):
                 if not screen:
                     return ({"message": SCREEN_NOT_FOUND_404}, 404)
                 screen_data = request.get_json()
-                screen_data = screen_schema.load(screen_data)
+                screen_data = cls.screen_schema.load(screen_data)
                 new_screen = ScreenModel.find_by_name(name=screen_data["name"])
                 if new_screen:
                     if screen != new_screen:
@@ -165,6 +188,9 @@ class ScreenResource(Resource):
 
 
 class ScreenListResource(Resource):
+
+    screen_schema = ScreenSchema()
+
     @classmethod
     @jwt_required
     def get(cls, cinema_id: int):
@@ -177,7 +203,6 @@ class ScreenListResource(Resource):
         This will get all the screens for the current logged in
         user.
         """
-        screen_schema = ScreenSchema()
         claims = get_jwt_claims()
         if claims:
             if safe_str_cmp(claims.get("type"), "admin"):
@@ -185,5 +210,5 @@ class ScreenListResource(Resource):
                 if not user.cinema_id == cinema_id:
                     return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
                 screens = ScreenListModel.find_screens_by_cinema(cinema_id=cinema_id)
-                return {"screens": screen_schema.dump(screens, many=True)}
+                return {"screens": cls.screen_schema.dump(screens, many=True)}
         return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
