@@ -10,6 +10,7 @@ from marshmallow import (
 )
 
 from .master_schedule import MasterScheduleSchema
+from .response_messages import END_TIME_GT_PLAY_TIME
 
 
 class ScheduleSchema(Schema):
@@ -37,6 +38,6 @@ class ScheduleSchema(Schema):
     def validate_time(self, in_data, **kwargs):
         errors = {}
         if in_data["play_time"] >= in_data["end_time"]:
-            errors["end_time"] = "end_time must be later than play_time."
+            errors["end_time"] = END_TIME_GT_PLAY_TIME
         if errors:
             raise ValidationError(errors)
