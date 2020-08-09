@@ -48,7 +48,7 @@ class AccountLoginResource(Resource):
         if account and account.verify_password(account_data["password"]):
             user = UserModel.find_by_account_id(id=account.id)
             access_token = create_access_token(
-                identity=user, fresh=True, expires_delta=timedelta(days=3)
+                identity=user, fresh=False, expires_delta=timedelta(days=3)
             )
             refresh_token = create_refresh_token(
                 identity=user, expires_delta=timedelta(hours=1)
@@ -111,3 +111,25 @@ class AccountResource(Resource):
                     return {"account": cls.account_schema.dump(account)}, 200
                 return {"message": ACCOUNT_NOT_FOUND_MESSAGE_404}, 404
         return {"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401
+
+
+class TokenRefresh(Resource):
+    @jwt_required
+    def post(self):
+        """path : /api/auth/refresh ."""
+        account_schema = AccountSchema(exclude=["email", "type"])
+        try:
+            account_data = account_schema.load(request.get_json())
+        except ValidationError as e:
+            return {"error": e.messages}
+        current_user = get_current_user()
+        if current_user.account.verify_password(account_data["password"]):
+            fresh_access_token = create_access_token(
+                identity=current_user, fresh=True, expires_delta=timedelta(minutes=5)
+            )
+            return (
+                {
+                    "fresh_access_token": fresh_access_token
+                }
+            ), 200
+        return ({"message": INVALID_ACCOUNT_MESSAGE_401}, 401)

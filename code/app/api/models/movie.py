@@ -14,16 +14,20 @@ class MovieModel(db.Model):
     __tablename__ = "movie"
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False, unique=True)
+    cinema_id = db.Column(db.Integer, db.ForeignKey("cinema.id"), nullable=False)
+    cinema = db.relationship("CinemaModel", backref="movie_cinema", lazy=True)
+    name = db.Column(db.String(120), nullable=False)
     description = db.Column(db.Text, nullable=False)
     duration = db.Column(db.Time, nullable=False)
     release_date = db.Column(db.Date, nullable=False)
     rating = db.Column(db.Float(2, 1))
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    db.UniqueConstraint(name, cinema_id)
 
-    def __init__(self, name, description, duration, release_date, rating=None):
+    def __init__(self, name, cinema_id, description, duration, release_date, rating=None):
         self.name = name
+        self.cinema_id = cinema_id
         self.description = description
         self.duration = duration
         self.release_date = release_date
@@ -34,6 +38,7 @@ class MovieModel(db.Model):
         return {
             "id": self.id,
             "name": self.name,
+            "cinema": self.cinema.json(),
             "description": self.description,
             "duration": self.duration,
             "release_date": self.release_date,
@@ -41,14 +46,14 @@ class MovieModel(db.Model):
         }
 
     @classmethod
-    def find_by_id(cls, *, id: int) -> "MovieModel":
+    def find_by_id(cls, *, id: int, cinema_id: int) -> "MovieModel":
         """Find a movie by id."""
-        return cls.query.filter_by(id=id).first()
+        return cls.query.filter_by(id=id, cinema_id=cinema_id).first()
     
     @classmethod
-    def find_by_name(cls, *, name: str) -> "MovieModel":
+    def find_by_name(cls, *, name: str, cinema_id: int) -> "MovieModel":
         """Find a movie by name."""
-        return cls.query.filter_by(name=name).first()
+        return cls.query.filter_by(name=name, cinema_id=cinema_id).first()
 
     def save_to_db(self):
         """Save a new movie in the database."""

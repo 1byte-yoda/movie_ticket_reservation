@@ -1,8 +1,8 @@
-"""empty message
+"""initial migration
 
-Revision ID: 4919300ee587
+Revision ID: 1f6a03e69544
 Revises: 
-Create Date: 2020-08-05 22:35:11.916905
+Create Date: 2020-08-08 16:44:24.636842
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = '4919300ee587'
+revision = '1f6a03e69544'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -39,21 +39,24 @@ def upgrade():
     )
     op.create_table('master_schedule',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('launch_datetime', sa.DateTime(), nullable=False),
-    sa.Column('phase_out_datetime', sa.DateTime(), nullable=False),
+    sa.Column('launch_date', sa.Date(), nullable=False),
+    sa.Column('phase_out_date', sa.Date(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk_master_schedule'))
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_master_schedule')),
+    sa.UniqueConstraint('launch_date', 'phase_out_date', name=op.f('uq_master_schedule_launch_date'))
     )
     op.create_table('movie',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=120), nullable=False),
-    sa.Column('price', sa.Float(precision=7, asdecimal=2), nullable=False),
     sa.Column('description', sa.Text(), nullable=False),
+    sa.Column('duration', sa.Time(), nullable=False),
+    sa.Column('release_date', sa.Date(), nullable=False),
     sa.Column('rating', sa.Float(precision=2, asdecimal=1), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk_movie'))
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_movie')),
+    sa.UniqueConstraint('name', name=op.f('uq_movie_name'))
     )
     op.create_table('payment',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -93,25 +96,16 @@ def upgrade():
     sa.ForeignKeyConstraint(['payment_id'], ['payment.id'], name=op.f('fk_reservation_payment_id_payment')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_reservation'))
     )
-    op.create_table('schedule',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('play_datetime', sa.DateTime(), nullable=False),
-    sa.Column('end_datetime', sa.DateTime(), nullable=False),
-    sa.Column('master_schedule_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['master_schedule_id'], ['master_schedule.id'], name=op.f('fk_schedule_master_schedule_id_master_schedule')),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk_schedule')),
-    sa.UniqueConstraint('master_schedule_id', 'play_datetime', 'end_datetime', name=op.f('uq_schedule_master_schedule_id'))
-    )
     op.create_table('screen',
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=120), nullable=False),
     sa.Column('capacity', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('cinema_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['cinema_id'], ['cinema.id'], name=op.f('fk_screen_cinema_id_cinema')),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk_screen'))
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_screen')),
+    sa.UniqueConstraint('name', name=op.f('uq_screen_name'))
     )
     op.create_table('barangay',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -122,10 +116,46 @@ def upgrade():
     sa.ForeignKeyConstraint(['city_id'], ['city.id'], name=op.f('fk_barangay_city_id_city')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_barangay'))
     )
+    op.create_table('schedule',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('play_time', sa.Time(), nullable=False),
+    sa.Column('end_time', sa.Time(), nullable=False),
+    sa.Column('screen_id', sa.Integer(), nullable=False),
+    sa.Column('master_schedule_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['master_schedule_id'], ['master_schedule.id'], name=op.f('fk_schedule_master_schedule_id_master_schedule')),
+    sa.ForeignKeyConstraint(['screen_id'], ['screen.id'], name=op.f('fk_schedule_screen_id_screen')),
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_schedule')),
+    sa.UniqueConstraint('screen_id', 'master_schedule_id', 'play_time', 'end_time', name=op.f('uq_schedule_screen_id'))
+    )
+    op.create_table('seat',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('row_id', sa.Integer(), nullable=False),
+    sa.Column('row_letter', sa.Enum('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'), nullable=False),
+    sa.Column('row_letter_id', mysql.INTEGER(display_width=2), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('screen_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['screen_id'], ['screen.id'], name=op.f('fk_seat_screen_id_screen')),
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_seat')),
+    sa.UniqueConstraint('screen_id', 'row_id', 'row_letter', name=op.f('uq_seat_screen_id'))
+    )
+    op.create_table('location',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('barangay_id', sa.Integer(), nullable=False),
+    sa.Column('longitude', sa.CHAR(length=16), nullable=False),
+    sa.Column('latitude', sa.CHAR(length=16), nullable=False),
+    sa.ForeignKeyConstraint(['barangay_id'], ['barangay.id'], name=op.f('fk_location_barangay_id_barangay')),
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_location'))
+    )
     op.create_table('movie_screen',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('price', sa.FLOAT(precision=6, asdecimal=2), nullable=False),
     sa.Column('movie_id', sa.Integer(), nullable=False),
     sa.Column('screen_id', sa.Integer(), nullable=False),
     sa.Column('schedule_id', sa.Integer(), nullable=False),
@@ -134,22 +164,6 @@ def upgrade():
     sa.ForeignKeyConstraint(['screen_id'], ['screen.id'], name=op.f('fk_movie_screen_screen_id_screen')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_movie_screen')),
     sa.UniqueConstraint('movie_id', 'screen_id', 'schedule_id', name=op.f('uq_movie_screen_movie_id'))
-    )
-    op.create_table('seat',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('screen_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['screen_id'], ['screen.id'], name=op.f('fk_seat_screen_id_screen')),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk_seat'))
-    )
-    op.create_table('location',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('barangay_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['barangay_id'], ['barangay.id'], name=op.f('fk_location_barangay_id_barangay')),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk_location'))
     )
     op.create_table('seat_reservation',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -173,9 +187,9 @@ def upgrade():
     sa.Column('contact_no', sa.String(length=50), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('account_id', sa.Integer(), nullable=False),
+    sa.Column('account_id', sa.Integer(), nullable=True),
     sa.Column('cinema_id', sa.Integer(), nullable=True),
-    sa.Column('location_id', sa.Integer(), nullable=False),
+    sa.Column('location_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['account_id'], ['account.id'], name=op.f('fk_user_account_id_account'), ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['cinema_id'], ['cinema.id'], name=op.f('fk_user_cinema_id_cinema'), ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['location_id'], ['location.id'], name=op.f('fk_user_location_id_location'), ondelete='CASCADE'),
@@ -202,12 +216,12 @@ def downgrade():
     op.drop_table('movie_rating')
     op.drop_table('user')
     op.drop_table('seat_reservation')
+    op.drop_table('movie_screen')
     op.drop_table('location')
     op.drop_table('seat')
-    op.drop_table('movie_screen')
+    op.drop_table('schedule')
     op.drop_table('barangay')
     op.drop_table('screen')
-    op.drop_table('schedule')
     op.drop_table('reservation')
     op.drop_table('city')
     op.drop_table('province')

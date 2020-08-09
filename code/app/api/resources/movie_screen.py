@@ -10,6 +10,7 @@ from .response_messages import (
     MOVIE_SCREENS_ADDED_201,
     MOVIE_SCREEN_NOT_FOUND_MESSAGE_404,
     MOVIE_SCREEN_DELETED_201,
+    MOVIE_NAME_EXISTS_400,
     UNKNOWN_ERROR_MESSAGE_500
 )
 from ..models.screen import ScreenModel
@@ -54,7 +55,9 @@ class MovieScreenResource(Resource):
                 )
                 if not screen:
                     return ({"message": SCREEN_NOT_FOUND_404}, 404)
-                movie_screen = MovieScreenModel.find_by_id(id=movie_screen_id)
+                movie_screen = MovieScreenModel.find_movie_screen(
+                    id=movie_screen_id, screen_id=screen_id
+                )
                 if not movie_screen:
                     return ({"message": MOVIE_SCREEN_NOT_FOUND_MESSAGE_404}, 404)
                 return ({"payload": cls.ms_schema.dump(movie_screen.json())}, 200)
@@ -150,7 +153,23 @@ class MovieScreenResource(Resource):
             user = get_current_user()
             if user.cinema_id != cinema_id:
                 return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
-            
+            screen = ScreenModel.find_by_id_cinema(
+                id=screen_id, cinema_id=cinema_id
+            )
+            if not screen:
+                return ({"message": SCREEN_NOT_FOUND_404}, 404)
+            movie_screen = MovieScreenModel.find_movie_screen(
+                id=movie_screen_id, screen_id=screen_id
+            )
+            if not movie_screen:
+                return ({"message": MOVIE_SCREEN_NOT_FOUND_MESSAGE_404}, 404)
+            movie_screen_data = cls.ms_schema.load(request.get_json())
+            movie_data = movie_screen_data["movie"]
+            schedules_data = movie_screen_data["schedules"]
+            master_schedule_data = movie_screen_data["master_schedule"]
+            price_data = schedules = movie_screen_data["price"]
+            movie = MovieModel.find_by_name(name=movie_data["name"])
+
     @classmethod
     @jwt_required
     def delete(cls, cinema_id: int, screen_id: int):
@@ -175,7 +194,9 @@ class MovieScreenResource(Resource):
                 if not screen:
                     return ({"message": SCREEN_NOT_FOUND_404}, 404)
                 movie_screen_id = _ms_schema.load(request.get_json())["id"]
-                movie_screen = MovieScreenModel.find_by_id(id=movie_screen_id)
+                movie_screen = MovieScreenModel.find_movie_screen(
+                    id=movie_screen_id, screen_id=screen_id
+                )
                 if not movie_screen:
                     return ({"message": MOVIE_SCREEN_NOT_FOUND_MESSAGE_404}, 404)
                 schedule = movie_screen.schedule

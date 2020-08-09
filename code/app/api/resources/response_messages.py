@@ -45,3 +45,11 @@ SCREEN_UPDATED_201 = "Screen updated successfully."
 
 # SCHEDULES
 SCHEDULE_CONFLICT_400 = "Conflicting schedules found in the system."
+
+
+# MOVIE
+MOVIE_NAME_EXISTS_400 = "Movie with that title already exists in the system."
+MOVIE_NOT_FOUND_404 = "Movie with that id was not found."
+MOVIE_ADDED_201 = "Movie created successfully."
+MOVIE_UPDATED_201 = "Movie updated successfully."
+MOVIE_DELETED_201 = "Movie deleted successfully."

@@ -7,6 +7,7 @@ from .screen import ScreenModel
 from .movie import MovieModel
 from .schedule import ScheduleModel
 from .customized_queries.movie_screen import SELECT_NOW_SHOWING_QUERY
+from .customized_queries.schedule import SELECT_CONFLICT_SCHEDULE_QUERY
 
 
 class MovieScreenModel(db.Model):
@@ -59,9 +60,9 @@ class MovieScreenModel(db.Model):
         return movie_screen.first()
 
     @classmethod
-    def find_by_id(cls, *, id: int) -> "MovieScreenModel":
+    def find_movie_screen(cls, *, id: int, screen_id: int) -> "MovieScreenModel":
         """Find a movie-screen by id."""
-        return cls.query.filter_by(id=id).first()
+        return cls.query.filter_by(id=id, screen_id=screen_id).first()
 
     def save_to_db(self):
         """Save a new movie-screen in the database."""
