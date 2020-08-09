@@ -11,7 +11,7 @@ class MovieSchema(Schema):
     cinema = fields.Nested(CinemaSchema, dump_only=True)
     description = fields.Str(required=True)
     duration = fields.Time(required=True, format="%H:%M:%S")
-    rating = fields.Float()
+    rating = fields.Float(allow_none=True)
     release_date = fields.Date(required=True, format="%Y-%m-%d")
 
     @post_load

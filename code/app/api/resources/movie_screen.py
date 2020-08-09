@@ -1,5 +1,7 @@
 from flask_restful import Resource, request
-from flask_jwt_extended import get_current_user, get_jwt_claims, jwt_required
+from flask_jwt_extended import (
+    get_current_user, get_jwt_claims, jwt_required, fresh_jwt_required
+)
 from werkzeug.security import safe_str_cmp
 
 from db import db
@@ -7,18 +9,21 @@ from .response_messages import (
     INVALID_REQUEST_ADMIN_MESSAGE_401,
     SCREEN_NOT_FOUND_404,
     SCHEDULE_CONFLICT_400,
+    SCHEDULE_LIST_NOT_SUPPORTED_400,
     MOVIE_SCREENS_ADDED_201,
     MOVIE_SCREEN_NOT_FOUND_MESSAGE_404,
     MOVIE_SCREEN_DELETED_201,
+    MOVIE_SCREEN_UPDATED_201,
     MOVIE_NAME_EXISTS_400,
+    MOVIE_NOT_FOUND_404,
     UNKNOWN_ERROR_MESSAGE_500
 )
 from ..models.screen import ScreenModel
 from ..models.movie_screen import MovieScreenModel, MovieScreenListModel
 from ..models.movie import MovieModel
-from ..models.master_schedule import MasterScheduleModel
 from ..models.schedule import ScheduleModel
 from ..schemas.movie_screen import MovieScreenSchema
+from ..schemas.movie import MovieSchema
 
 
 class MovieScreenResource(Resource):
@@ -31,6 +36,7 @@ class MovieScreenResource(Resource):
     """
 
     ms_schema = MovieScreenSchema()
+    movie_schema = MovieSchema()
 
     @classmethod
     @jwt_required
@@ -86,26 +92,22 @@ class MovieScreenResource(Resource):
                 )
                 if not screen:
                     return ({"message": SCREEN_NOT_FOUND_404}, 404)
-                movie_screen_data = cls.ms_schema.load(request.get_json())
-                price = movie_screen_data["price"]
-                movie_data = movie_screen_data["movie"]
-                schedules_data = movie_screen_data["schedules"]
-                master_schedule_data = movie_screen_data["master_schedule"]
-
-                movie = MovieModel.find_by_name(name=movie_data["name"])
+                request_data = request.get_json()
+                movie = MovieModel.find_by_id(
+                    id=request_data["movie_id"], cinema_id=cinema_id
+                )
                 if not movie:
-                    movie = MovieModel(**movie_data)
-
-                master_schedule = MasterScheduleModel.find_by_dates(
-                    dates=master_schedule_data
-                )
-                if not master_schedule:
-                    master_schedule = MasterScheduleModel(**master_schedule_data)
-
+                    return ({"message": MOVIE_NOT_FOUND_404}, 404)
+                request_data["movie"] = cls.movie_schema.dump(movie.json())
+                request_data["movie"].pop("cinema")
+                request_data.pop("movie_id")
+                movie_screen_data = cls.ms_schema.load(request_data)
+                price = movie_screen_data["price"]
+                schedules_data = movie_screen_data["schedules"]
                 schedules = ScheduleModel.find_conflicts(
-                    **master_schedule_data, scheds=schedules_data, screen_id=screen_id
+                    scheds=schedules_data, screen_id=screen_id
                 )
-                schedules = list(sched for sched in schedules)
+                schedules = list(schedules)
                 scheds_zip = zip(schedules, schedules_data)
                 conflicts = [inp_sch for db_sch, inp_sch in scheds_zip if db_sch is not None]
                 if conflicts:
@@ -117,11 +119,7 @@ class MovieScreenResource(Resource):
                     )
                 movie_screens = []
                 for sched in schedules_data:
-                    schedule = (
-                        ScheduleModel(
-                            screen=screen, master_schedule=master_schedule, **sched
-                        )
-                    )
+                    schedule = ScheduleModel(screen=screen, **sched)
                     movie_screens.append(
                         MovieScreenModel(
                             movie=movie, screen=screen, schedule=schedule, price=price)
@@ -148,27 +146,57 @@ class MovieScreenResource(Resource):
         """
         claims = get_jwt_claims()
         if claims:
-            if not safe_str_cmp(claims.get("type"), "admin"):
-                return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
-            user = get_current_user()
-            if user.cinema_id != cinema_id:
-                return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
-            screen = ScreenModel.find_by_id_cinema(
-                id=screen_id, cinema_id=cinema_id
-            )
-            if not screen:
-                return ({"message": SCREEN_NOT_FOUND_404}, 404)
-            movie_screen = MovieScreenModel.find_movie_screen(
-                id=movie_screen_id, screen_id=screen_id
-            )
-            if not movie_screen:
-                return ({"message": MOVIE_SCREEN_NOT_FOUND_MESSAGE_404}, 404)
-            movie_screen_data = cls.ms_schema.load(request.get_json())
-            movie_data = movie_screen_data["movie"]
-            schedules_data = movie_screen_data["schedules"]
-            master_schedule_data = movie_screen_data["master_schedule"]
-            price_data = schedules = movie_screen_data["price"]
-            movie = MovieModel.find_by_name(name=movie_data["name"])
+            if safe_str_cmp(claims.get("type"), "admin"):
+                user = get_current_user()
+                if user.cinema_id != cinema_id:
+                    return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
+                screen = ScreenModel.find_by_id_cinema(
+                    id=screen_id, cinema_id=cinema_id
+                )
+                if not screen:
+                    return ({"message": SCREEN_NOT_FOUND_404}, 404)
+                movie_screen = MovieScreenModel.find_movie_screen(
+                    id=movie_screen_id, screen_id=screen_id
+                )
+                if not movie_screen:
+                    return ({"message": MOVIE_SCREEN_NOT_FOUND_MESSAGE_404}, 404)
+                request_data = request.get_json()
+                if len(request_data["schedules"]) > 1:
+                    return ({"message": SCHEDULE_LIST_NOT_SUPPORTED_400}, 400)
+                if movie_screen.movie_id != request_data.get("movie_id", None):
+                    return ({"message": MOVIE_NOT_FOUND_404}, 404)
+                movie = cls.movie_schema.dump(movie_screen.movie.json())
+                request_data["movie"] = movie
+                request_data["movie"].pop("cinema")
+                request_data.pop("movie_id")
+                movie_screen_data = cls.ms_schema.load(request_data)
+                price_data = movie_screen_data["price"]
+                schedules_data = movie_screen_data["schedules"]
+                schedule = movie_screen.schedule
+                schedules = ScheduleModel.find_conflicts(
+                    screen_id=screen_id, scheds=schedules_data
+                )
+                schedules = list(schedules)
+                scheds_zip = zip(schedules, schedules_data)
+                conflicts = [inp_sch for db_sch, inp_sch in scheds_zip if db_sch is not None]
+                if conflicts and (schedules[0] != schedule):
+                    return (
+                        {
+                            "message": SCHEDULE_CONFLICT_400,
+                            "payload": conflicts
+                        }, 400
+                    )
+                schedule.update(schedules_data[0])
+                movie_screen.price = price_data
+                try:
+                    db.session.commit()
+                except Exception as e:
+                    print(e)
+                    db.session.rollback()
+                    db.session.flush()
+                    return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)
+                return ({"message": MOVIE_SCREEN_UPDATED_201}, 201)
+        return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
 
     @classmethod
     @jwt_required
@@ -200,18 +228,11 @@ class MovieScreenResource(Resource):
                 if not movie_screen:
                     return ({"message": MOVIE_SCREEN_NOT_FOUND_MESSAGE_404}, 404)
                 schedule = movie_screen.schedule
-                master_schedule_id = schedule.master_schedule_id
-                master_schedule_dependents = ScheduleModel.count_instances(
-                    master_schedule_id=master_schedule_id
-                )
                 db.session.delete(movie_screen)
                 db.session.delete(schedule)
-                if master_schedule_dependents == 1:
-                    db.session.delete(schedule.master_schedule)
                 try:
                     db.session.commit()
                 except Exception as e:
-                    print(e)
                     db.session.rollback()
                     db.session.flush()
                     return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)

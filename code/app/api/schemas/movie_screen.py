@@ -5,9 +5,8 @@ from marshmallow import Schema, fields, validates_schema, ValidationError
 from .movie import MovieSchema
 from .screen import ScreenSchema
 from .schedule import ScheduleSchema
-from .master_schedule import MasterScheduleSchema
 from .response_messages import (
-    LAUNCH_DATE_GT_RELEASE_DATE,
+    SCHEDULE_GT_RELEASE_DATE,
     WRONG_TIME_DURATIONS,
     OVERLAP_SCHEDULES
 )
@@ -22,17 +21,16 @@ class MovieScreenSchema(Schema):
     schedules = fields.List(
         fields.Nested(ScheduleSchema, required=True), required=True
     )
-    master_schedule = fields.Nested(MasterScheduleSchema, required=True)
 
     @staticmethod
     def sched_a_larger_than_b(sched_a: dict, sched_b: dict) -> bool:
-        return (sched_a["play_time"] > sched_b["play_time"] and
-                sched_a["play_time"] > sched_b["end_time"])
+        return (sched_a["play_datetime"] > sched_b["play_datetime"] and
+                sched_a["play_datetime"] > sched_b["end_datetime"])
 
     @staticmethod
     def sched_a_smaller_than_b(sched_a: dict, sched_b: dict) -> bool:
-        return (sched_a["play_time"] < sched_b["play_time"] and
-                sched_a["play_time"] < sched_b["end_time"])
+        return (sched_a["play_datetime"] < sched_b["play_datetime"] and
+                sched_a["play_datetime"] < sched_b["end_datetime"])
 
     @classmethod
     def check_conflict_schedules(cls, _schedules: list) -> list:
@@ -54,26 +52,47 @@ class MovieScreenSchema(Schema):
     @classmethod
     def check_schedule_durations(cls, base_time: str, _schedules: list) -> list:
         _wrong_durations = list()
+        date_time_format = "%Y-%m-%d %H:%M:%S"
         _time_format = "%H:%M:%S"
         base_time = datetime.strptime(base_time, _time_format).time()
         for sched in _schedules:
-            _play_time = datetime.strptime(sched["play_time"], _time_format).time()
-            _end_time = datetime.strptime(sched["end_time"], _time_format).time()
+            _play_datetime = datetime.strptime(
+                sched["play_datetime"], date_time_format
+            ).time()
+            _end_datetime = datetime.strptime(
+                sched["end_datetime"], date_time_format
+            ).time()
             _duration = (
-                datetime.combine(date.min, _end_time) -
-                datetime.combine(date.min, _play_time)
+                datetime.combine(date.min, _end_datetime) -
+                datetime.combine(date.min, _play_datetime)
             )
             _duration = (datetime.min + _duration).time()
             if _duration < base_time:
                 _wrong_durations.append(sched)
         return _wrong_durations
 
+    @classmethod
+    def check_schedule_within_release_date(cls, release_date: datetime, schedules: list):
+        date_time_format = "%Y-%m-%d %H:%M:%S"
+        date_format = "%Y-%m-%d"
+        release_date = datetime.strptime(release_date, date_format).date()
+        invalid_schedules = []
+        for schedule in schedules:
+            play_datetime = datetime.strptime(
+                schedule.get("play_datetime"), date_time_format
+            ).date()
+            end_datetime = datetime.strptime(
+                schedule.get("end_datetime"), date_time_format
+            ).date()
+            if play_datetime < release_date or end_datetime < release_date:
+                invalid_schedules.append(schedule)
+        return invalid_schedules
+
     @validates_schema
     def validate_schedules(self, in_data, **kwargs):
         errors = {}
         _schedules = in_data.get("schedules", None)
         _movie = in_data.get("movie", None)
-        _master_schedule = in_data.get("master_schedule", None)
 
         if _schedules:
             conflicting_schedules = self.check_conflict_schedules(
@@ -98,15 +117,15 @@ class MovieScreenSchema(Schema):
                         "error": WRONG_TIME_DURATIONS.format(_base_time),
                         "payload": wrong_schedules
                     })
-
-        if _master_schedule and _movie:
-            if _master_schedule["launch_date"] < _movie["release_date"]:
-                errors["release_date"] = {
-                    "error": LAUNCH_DATE_GT_RELEASE_DATE,
-                    "payload": {
-                        "launch_date": _master_schedule["launch_date"],
-                        "release_date": _movie["release_date"]
-                    }
-                }
+                outof_release_list = self.check_schedule_within_release_date(
+                    release_date=_movie["release_date"], schedules=_schedules
+                )
+                if outof_release_list:
+                    if not errors.get("schedules"):
+                        errors["schedules"] = []
+                    errors["schedules"].append({
+                        "error": SCHEDULE_GT_RELEASE_DATE,
+                        "payload": outof_release_list
+                    })
         if errors:
             raise ValidationError(errors)

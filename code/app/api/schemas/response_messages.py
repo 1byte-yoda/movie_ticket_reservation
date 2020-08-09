@@ -1,5 +1,5 @@
 # MOVIE_SCREEN
-LAUNCH_DATE_GT_RELEASE_DATE = "launch_date must be later than release_date"
+SCHEDULE_GT_RELEASE_DATE = "play_datetime and end_datetime must be later than release_date"
 WRONG_TIME_DURATIONS = ("wrong duration(s) found, "
                         "schedule duration must be bigger than {}")
 OVERLAP_SCHEDULES = "You have overlapping schedule(s)."

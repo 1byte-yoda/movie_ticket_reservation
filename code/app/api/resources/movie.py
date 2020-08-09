@@ -86,7 +86,12 @@ class MovieResource(Resource):
                     db.session.rollback()
                     db.session.flush()
                     return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)
-                return ({"message": MOVIE_ADDED_201}, 201)
+                return (
+                    {
+                        "message": MOVIE_ADDED_201,
+                        "payload": cls.movie_schema.dump(movie.json())
+                    }, 201
+                )
         return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
 
     @classmethod

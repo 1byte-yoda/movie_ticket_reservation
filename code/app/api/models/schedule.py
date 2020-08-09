@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from db import db
-from .master_schedule import MasterScheduleModel
 from .screen import ScreenModel
 from .customized_queries.schedule import SELECT_CONFLICT_SCHEDULE_QUERY
 
@@ -18,36 +17,28 @@ class ScheduleModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
-    play_time = db.Column(db.Time, nullable=False)
-    end_time = db.Column(db.Time, nullable=False)
+    play_datetime = db.Column(db.DateTime, nullable=False)
+    end_datetime = db.Column(db.DateTime, nullable=False)
     screen_id = db.Column(
         db.Integer, db.ForeignKey("screen.id"), nullable=False
     )
     screen = db.relationship(
         ScreenModel, backref="schedule_screen", lazy=True
     )
-    master_schedule_id = db.Column(
-        db.Integer, db.ForeignKey("master_schedule.id"), nullable=False
-    )
-    master_schedule = db.relationship(
-        MasterScheduleModel, backref="master_schedule", lazy=True
-    )
-    db.UniqueConstraint(screen_id, master_schedule_id, play_time, end_time,)
+    db.UniqueConstraint(screen_id, play_datetime, end_datetime,)
 
-    def __init__(self, play_time, end_time, screen, master_schedule):
-        self.play_time = play_time
-        self.end_time = end_time
+    def __init__(self, play_datetime, end_datetime, screen):
+        self.play_datetime = play_datetime
+        self.end_datetime = end_datetime
         self.screen = screen
-        self.master_schedule = master_schedule
 
     def json(self):
         """JSON representation of the ScheduleModel."""
         return {
             "id": self.id,
-            "play_time": self.play_time,
-            "end_time": self.end_time,
-            "screen": self.screen.json(),
-            "master_schedule": self.master_schedule.json()
+            "play_datetime": self.play_datetime,
+            "end_datetime": self.end_datetime,
+            "screen": self.screen.json()
         }
 
     @classmethod
@@ -56,14 +47,12 @@ class ScheduleModel(db.Model):
         return cls.query.filter_by(id=id).first()
 
     @classmethod
-    def find_conflicts(cls, screen_id, launch_date, phase_out_date, scheds):
+    def find_conflicts(cls, screen_id, scheds):
         """Find a schedule in the database by screen_id its schedule."""
         for sched in scheds:
             yield (cls.query.from_statement(db.text(
                 SELECT_CONFLICT_SCHEDULE_QUERY.format(
                     screen_id=screen_id,
-                    launch_date=launch_date,
-                    phase_out_date=phase_out_date,
                     **sched
                 )
             )).first())
@@ -78,7 +67,6 @@ class ScheduleModel(db.Model):
         (db.session.query(ScheduleModel)
                    .filter_by(id=self.id)
                    .update(update_data))
-        db.session.commit()
 
     def remove_from_db(self):
         """Remove a schedule from the database."""
