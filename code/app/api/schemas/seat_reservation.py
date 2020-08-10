@@ -2,10 +2,8 @@ from marshmallow import Schema, fields
 
 from .reservation import ReservationSchema
 from .cinema import CinemaSchema
-from .screen import ScreenSchema
+from .movie_screen import MovieScreenSchema
 from .seat import SeatSchema
-from .movie import MovieSchema
-from .schedule import ScheduleSchema
 
 
 class SeatReservationPostSchema(Schema):
@@ -24,7 +22,5 @@ class SeatReservationSchema(Schema):
     price = fields.Float()
     reservation = fields.Nested(ReservationSchema)
     cinema = fields.Nested(CinemaSchema)
-    screen = fields.Nested(ScreenSchema)
-    seat = fields.Nested(SeatSchema)
-    movie = fields.Nested(MovieSchema)
-    schedule = fields.Nested(ScheduleSchema)
+    movie_screen = fields.Nested(MovieScreenSchema)
+    seats = fields.Nested(SeatSchema)

@@ -16,6 +16,7 @@ from .response_messages import (
 from ..models.movie_rating import MovieRatingModel
 from ..models.account import AccountModel
 from ..models.location import LocationModel
+from ..models.barangay import BarangayModel
 from ..models.user import UserModel
 from ..schemas.user import UserSchema
 from ..schemas.account import AccountSchema
@@ -44,7 +45,11 @@ class UserRegisterResource(Resource):
         if AccountModel.find_by_email(email=user_data["account"]["email"]):
             return {"message": ACCOUNT_EXISTS_MESSAGE_400}, 400
         new_account = AccountModel(**user_data["account"])
-        location = LocationModel(barangay_id=user_data["location"]["barangay"]["id"])
+        location = LocationModel(
+            barangay_id=user_data["location"]["barangay"]["id"],
+            latitude=user_data["location"]["latitude"],
+            longitude=user_data["location"]["longitude"]
+        )
         user = UserModel(
             first_name=user_data["first_name"],
             last_name=user_data["last_name"],
@@ -54,7 +59,8 @@ class UserRegisterResource(Resource):
         )
         try:
             user.save_to_db()
-        except:
+        except Exception as e:
+            print(e)
             db.session.rollback()
             db.session.flush()
             return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)

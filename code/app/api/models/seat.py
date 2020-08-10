@@ -37,6 +37,14 @@ class SeatModel(db.Model):
         self.row_letter = row_letter
         self.row_letter_id = row_letter_id
 
+    def json(self):
+        return {
+            "id": self.id,
+            "row_id": self.row_id,
+            "col_letter": self.row_letter,
+            "col_id": self.row_letter_id
+        }
+
     @classmethod
     def find_by_id(cls, id: int) -> "SeatModel":
         """Find a seat in the database by id."""

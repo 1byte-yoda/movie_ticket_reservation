@@ -4,7 +4,7 @@ from sqlalchemy.dialects.mysql import TINYINT
 
 from db import db
 from .user import UserModel
-from .payment import PaymentModel
+from .reservation import ReservationModel
 from .movie import MovieModel
 
 
@@ -19,8 +19,10 @@ class MovieRatingModel(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     user = db.relationship(UserModel, backref="user.id")
-    payment_id = db.Column(db.Integer, db.ForeignKey("payment.id"), nullable=False)
-    payment = db.relationship(PaymentModel, backref="movie_rating_payment", uselist=False)
+    reservation_id = db.Column(
+        db.Integer, db.ForeignKey("reservation.id"), unique=True, nullable=False
+    )
+    reservation = db.relationship(ReservationModel, backref="movie_rating_reservation", uselist=False)
     movie_id = db.Column(db.Integer, db.ForeignKey("movie.id"), nullable=False)
     movie = db.relationship(MovieModel, backref="movie_rating_movie")
 

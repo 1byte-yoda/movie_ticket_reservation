@@ -41,13 +41,10 @@ class SeatReservationModel(db.Model):
         """JSON represation of SeatReservationModel."""
         return {
             "id": self.id,
-            "price": self.price,
             "reservation": self.reservation.json(),
             "cinema": self.movie_screen.screen.cinema.json(),
-            "screen": {"id": self.movie_screen.screen_id},
-            "seat": {"id": self.seat_id},
-            "movie": self.movie_screen.movie.json(),
-            "schedule": self.movie_screen.schedule.json()
+            "screen": {"id": self.movie_screen.json()},
+            "seat": {"id": self.seats.json()}
         }
 
     @classmethod
@@ -83,7 +80,7 @@ class SeatReservationListModel(SeatReservationModel):
             cls.query.join(MovieScreenModel)
             .filter(movie_screen.id == cls.movie_screen_id)
             .filter(cls.seat_id.in_(seat_id_list))
-            .with_entities("seat_reservation.movie_screen_id")
+            .with_entities("seat_reservation.seat_id")
             .all()
         )
         return list(*zip(*seats))

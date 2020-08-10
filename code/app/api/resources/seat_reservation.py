@@ -11,7 +11,6 @@ from marshmallow.exceptions import ValidationError
 from db import db
 from ..models.seat_reservation import SeatReservationModel, SeatReservationListModel
 from ..models.movie_screen import MovieScreenModel
-from ..models.payment import PaymentModel
 from ..models.reservation import ReservationModel
 from .response_messages import (
     SEAT_RESERVATION_NOT_FOUND_MESSAGE_404,
@@ -102,7 +101,7 @@ class SeatReservationResource(Resource):
 
         # Seats
         seat_id_list = seat_reservation_data["seat_id_list"]
-        largest_seat_id = max(seat_id_list)
+        largest_seat_id = len(seat_id_list)
         if largest_seat_id > max_screen_capacity:
             return ({"message": SEATS_NOT_FOUND_MESSAGE_404}, 404)
 
@@ -120,20 +119,24 @@ class SeatReservationResource(Resource):
             db.session.flush()
             return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
 
-        # Payment
-        head_count = len(seat_id_list)
-        movie_price = movie_screen.movie.price
-        total_price = movie_price * head_count
-        payment = PaymentModel(
-            token_id="some-random-token-that-i-created.",
-            total_price=total_price,
-            type="paymaya",
-        )
-
         # Reservation
+        head_count = len(seat_id_list)
+        movie_price = movie_screen.price
+        total_price = movie_price * head_count
+        token = seat_reservation_data.get("token") or ""
         reservation = ReservationModel(
-            head_count=head_count, account=account, payment=payment
+            head_count=head_count, account=account, total_price=total_price, token=token
         )
+        # reservation.save_to_db()
+
+        reservation.set_status("failed")
+        # item_details = {
+        #     "amount": total_price,
+        #     "description": f"[{movie_price} x {head_count}] - {movie_screen.movie.name}"
+        #                    f"_{movie_screen.movie.cinema_id}"
+        # }
+        # reservation.charge_with_stripe(item_details=item_details, token=token)
+        reservation.set_status("success")
 
         # Seat Reservation
         seat_reservation_list = []
@@ -147,21 +150,24 @@ class SeatReservationResource(Resource):
             seat_reservation_list.append(seat_reservation)
         try:
             SeatReservationModel.save_all(seat_reservations=seat_reservation_list)
-        except:
+        except Exception as e:
+            print(e)
             db.session.rollback()
             db.session.flush()
             return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
 
         try:
-            seat_reservation_summary = reservation.generate_json_ticket()
-        except:
+            tickets = []
+            # tickets = cls.schema.dump(seat_reservation_list, many=True)
+        except Exception as e:
+            db.session.rollback()
             db.session.flush()
             return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
 
         return (
             {
                 "message": SEAT_RESERVATION_CREATED_MESSAGE_201,
-                "seat_reservation_summary": seat_reservation_summary,
+                "tickets": tickets,
             },
             201,
         )

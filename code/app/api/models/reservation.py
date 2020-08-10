@@ -1,9 +1,15 @@
 from datetime import datetime
+import os
+
+from sqlalchemy.types import CHAR, FLOAT
+import stripe
 
 from db import db
 from .account import AccountModel
-from .payment import PaymentModel
 from .customized_queries.reservation import SELECT_TICKET_QUERY
+
+
+CURRENCY = "usd"
 
 
 TICKET_COLUMNS = [
@@ -31,15 +37,15 @@ class ReservationModel(db.Model):
 
     account_id = db.Column(db.Integer, db.ForeignKey("account.id"), nullable=False)
     account = db.relationship(AccountModel, backref="account", lazy=True)
-    payment_id = db.Column(db.Integer, db.ForeignKey("payment.id"), nullable=False)
-    payment = db.relationship(PaymentModel, backref="payment", lazy=True, uselist=False)
+    status = db.Column(CHAR(16), nullable=False, default="failed")
+    token = db.Column(db.String(128), nullable=False)
+    total_price = db.Column(FLOAT(7, 2), nullable=False)
 
-    def __init__(self, head_count, account, payment, reserve_datetime=None, id=None):
-        self.id = id
+    def __init__(self, head_count, account, total_price, token):
         self.head_count = head_count
-        self.reserve_datetime = reserve_datetime
         self.account = account
-        self.payment = payment
+        self.total_price = total_price
+        self.token = token
 
     def save_to_db(self):
         """Docstring here."""
@@ -51,9 +57,29 @@ class ReservationModel(db.Model):
             "id": self.id,
             "head_count": self.head_count,
             "reserve_datetime": self.reserve_datetime,
-            "account": self.account.json(),
-            "payment": self.payment.json(),
+            "account": self.account.json()
         }
+
+    def set_status(self, status: str):
+        self.status = status
+
+    def charge_with_stripe(self, item_details: dict, token: str) -> stripe.Charge:
+        stripe.api_key = os.environ.get("STRIPE_API_KEY")
+        line_times = [{
+            "price_data": {
+                "currency": CURRENCY,
+                "product_data": item_details,
+                "unit_amount": price,
+            },
+            "quantity": head_count
+        }]
+        return stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_times=line_times,
+            source=token,
+            success_url="",
+            cancel_url=""
+        )
 
     def generate_json_ticket(self) -> dict:
         """Generate a JSON ticket summary of a reservation."""
