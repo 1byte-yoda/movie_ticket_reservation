@@ -12,6 +12,7 @@ from marshmallow.validate import ValidationError
 from db import db
 from .response_messages import (
     CINEMA_NOT_FOUND_404,
+    CINEMA_UPDATED_201,
     INVALID_REQUEST_ADMIN_MESSAGE_401,
     INVALID_ALREADY_LOGIN_400,
     ACCOUNT_EXISTS_MESSAGE_400,
@@ -56,6 +57,27 @@ class CinemaResource(Resource):
                 if cinema:
                     return ({"cinema": cls.cinema_schema.dump(cinema.json())}, 200)
                 return ({"message": CINEMA_NOT_FOUND_404}, 404)
+        return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
+    
+    @classmethod
+    @jwt_required
+    def put(cls, cinema_id: int):
+        claims = get_jwt_claims()
+        if claims:
+            if safe_str_cmp(claims.get("type"), "admin"):
+                user = get_current_user()
+                if user.cinema_id != cinema_id:
+                    return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
+                cinema_data = request.get_json()
+                cinema_data = cls.cinema_schema.load(cinema_data)
+                cinema = CinemaModel.find_by_id(id=cinema_id)
+                try:
+                    cinema.update(update_data=cinema_data)
+                except:
+                    db.session.rollback()
+                    db.session.flush()
+                    return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)
+                return ({"message": CINEMA_UPDATED_201}, 201)
         return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
 
 
@@ -109,8 +131,6 @@ class CinemaUserResourse(Resource):
             return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)
         return ({"message": ACCOUNT_CREATED_MESSAGE_201}, 201)
 
-    def put(self):
-        pass
 
     @classmethod
     @jwt_required

@@ -1,6 +1,6 @@
 # GENERAL
 INVALID_REQUEST_ADMIN_MESSAGE_401 = "Invalid request, please contact the admin."
-UNKNOWN_ERROR_MESSAGE_500 = "An unknown error occured."
+UNKNOWN_ERROR_MESSAGE_500 = "Internal Server Error [Unknown error occured]"
 
 
 # ACCOUNT
@@ -34,6 +34,7 @@ MOVIE_SCREEN_UPDATED_201 = "Movie Screen updated successfully."
 
 # CINEMA
 CINEMA_NOT_FOUND_404 = "Cinema not found."
+CINEMA_UPDATED_201 = "Cinema updated successfully."
 
 
 # SCREEN

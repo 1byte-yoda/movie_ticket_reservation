@@ -10,7 +10,10 @@ SEAT_RESERVATION_LIST_ROUTES = ["/api/seat-reservations"]
 
 # ACCOUNT
 ACCOUNT_ROUTES = ["/api/account"]
-ACCOUNT_LOGIN_ROUTES = ["/api/auth/login", "/api/account/update"]
+ACCOUNT_LOGIN_ROUTES = [
+    "/api/auth/login",
+    "/api/account/update"
+]
 ACCOUNT_LOGOUT_ROUTES = ["/api/auth/logout"]
 ACCOUNT_FRESH_TOKEN_ROUTES = ["/api/auth/refresh"]
 
@@ -21,8 +24,14 @@ USER_ROUTES = ["/api/user/delete"]
 
 
 # CINEMA
-CINEMA_ROUTES = ["/api/cinema/<int:cinema_id>"]
-CINEMA_USER_ROUTES = ["/api/cinema/register", "/api/cinema/delete"]
+CINEMA_ROUTES = [
+    "/api/cinema/<int:cinema_id>"
+]
+CINEMA_USER_ROUTES = [
+    "/api/cinema/register",
+    "/api/cinema/<int:cinema_id>/edit",
+    "/api/cinema/delete"
+]
 
 
 # SCREEN
