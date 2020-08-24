@@ -11,14 +11,21 @@ settings.json
 __pycache__/
 *.py[cod]
 *.pyc
-code/app/create_seat_list.py
+backend/code/app/create_seat_list.py
 testing.py
+
 
 # SQLite files
 *.sqlite
 
 # IMAGES
-__movies__/
+*.jpg
+*.jpe
+*.jpeg
+*.png
+*.gif
+*.svg
+*.bmp
 
 # NPM modules
 frontend/node_modules/
