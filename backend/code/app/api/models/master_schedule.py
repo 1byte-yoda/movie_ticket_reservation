@@ -13,7 +13,6 @@
 #     phase_out_date = db.Column(db.Date, nullable=False)
 #     created_at = db.Column(db.DateTime, default=datetime.now)
 #     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
-#     db.UniqueConstraint(launch_date, phase_out_date)
 
 #     def __init__(self, launch_date, phase_out_date):
 #         self.launch_date = launch_date

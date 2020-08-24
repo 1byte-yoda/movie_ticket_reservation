@@ -20,7 +20,7 @@ from .response_messages import (
 )
 from ..models.screen import ScreenModel
 from ..models.movie_screen import MovieScreenModel, MovieScreenListModel
-from ..models.movie import MovieModel
+from ..models.movie import MovieModel, MovieListModel
 from ..models.schedule import ScheduleModel
 from ..schemas.movie_screen import MovieScreenSchema
 from ..schemas.movie import MovieSchema
@@ -122,7 +122,11 @@ class MovieScreenResource(Resource):
                     schedule = ScheduleModel(screen=screen, **sched)
                     movie_screens.append(
                         MovieScreenModel(
-                            movie=movie, screen=screen, schedule=schedule, price=price)
+                            movie=movie,
+                            screen=screen,
+                            schedule=schedule,
+                            price=price
+                        )
                     )
                 try:
                     MovieScreenListModel.save_all(movie_screens)
@@ -273,7 +277,33 @@ class MovieScreenListResource(MovieScreenResource):
                 )
                 if not screen:
                     return ({"message": SCREEN_NOT_FOUND_404}, 404)
-                movie_screens = MovieScreenListModel.find_all_owned(screen_id=screen_id)
+                movie_screens = MovieScreenListModel.find_by_screen_id(screen_id=screen_id)
                 movie_screens = list(map(lambda ms: ms.json(), movie_screens))
+                print(MovieScreenListModel.find_all_owned(cinema_id=user.cinema_id))
                 return ({"payload": cls.ms_schema.dump(movie_screens, many=True)}, 200)
         return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
+
+
+# class MovieCinemaListResource(MovieScreenResource):
+#     """Contains the REST API methods for Movie-Cinema-List transactions.
+
+#     Description
+#     -----------
+#     Inherits MovieScreenReource to work with list of MovieScreens owned by a Cinema.
+#     """
+
+#     ms_schema = MovieScreenSchema()
+
+#     @classmethod
+#     def get(cls, page: int):
+#         """GET method that pulls all of the movie products.
+
+#         path : /api/movie-screens/<int:page>
+
+#         Description
+#         -----------
+#         This will parse all of the deployed movies.
+#         """
+#         movie_screens = MovieScreenListModel.find_movie_page(page=page)
+#         movie_screens = list(map(lambda ms: ms.json(), movie_screens))
+#         return ({"payload": cls.ms_schema.dump(movie_screens, many=True)}, 200)

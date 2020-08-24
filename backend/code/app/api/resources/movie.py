@@ -8,7 +8,7 @@ from flask_jwt_extended import (
 from werkzeug.security import safe_str_cmp
 
 from db import db
-from ..models.movie import MovieModel
+from ..models.movie import MovieModel, MovieListModel
 from ..schemas.movie import MovieSchema
 from .response_messages import (
     INVALID_REQUEST_ADMIN_MESSAGE_401,
@@ -95,7 +95,7 @@ class MovieResource(Resource):
         return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
 
     @classmethod
-    @fresh_jwt_required
+    @jwt_required
     def put(cls, cinema_id: int, movie_id: int):
         """PUT method that will update a movie for a particular cinema manager.
 
@@ -168,3 +168,43 @@ class MovieResource(Resource):
                     return ({"message": UNKNOWN_ERROR_MESSAGE_500}, 500)
                 return ({"message": MOVIE_DELETED_201}, 201)
         return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
+
+
+class MovieListResource(Resource):
+    """Contains the REST API methods for Movie List transactions.
+
+    Description
+    -----------
+    Movie interacts with the movie table which contains.
+    """
+
+    movie_schema = MovieSchema(many=True)
+
+    @classmethod
+    def get(cls):
+        """GET method that pulls all of the movie in the system.
+
+        path : /api/movies
+
+        Description
+        -----------
+        This will parse all deployed movies in the system.
+        """
+        import ast, json
+        movies = MovieListModel.find_all_movies()
+        movies = [movie.json() for movie in movies]
+        return cls.movie_schema.dump(movies)
+
+
+class MoviePaginationResource(Resource):
+    def get(self):
+        """GET method that calculates the page count for the movie page.
+
+        path : /api/movie-page/size
+
+        Description
+        -----------
+        Calculate the page count for the movie page.
+        """
+        page_size = MovieModel.calculate_page_size()
+        return {"page_size": page_size}

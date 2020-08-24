@@ -61,3 +61,7 @@ MOVIE_DELETED_201 = "Movie deleted successfully."
 # IMAGE UPLOAD
 IMAGE_UPLOADED_201 = "Image '{}' uploaded successfully."
 IMAGE_ILLEGAL_EXTENSION_400 = "Image extension '{}' is invalid."
+IMAGE_ILLEGAL_FILENAME_400 = "Image filename '{}' is illegal."
+IMAGE_NOT_FOUND_404 = "Image '{}' not found."
+IMAGE_DELETED_200 = "Image '{}' deleted successfully."
+IMAGE_DELETE_FAILED_500 = "Internal server error! Failed to delete image."

@@ -67,5 +67,29 @@ MOVIE_ROUTES = [
 
 # IMAGE UPLOAD
 IMAGE_UPLOAD_ROUTES = [
-    "/api/upload/image"
+    "/api/image/upload"
+]
+
+
+# IMAGE
+IMAGE_ROUTES = [
+    "/api/image/<string:filename>"
+]
+
+
+# # MOVIE_CINEMA_LIST
+# MOVIE_CINEMA_LIST_ROUTES = [
+#     "/api/movie-screens/<int:page>"
+# ]
+
+
+# MOVIE_LIST
+MOVIE_LIST_ROUTES = [
+    "/api/movies"
+]
+
+
+# MOVIE_PAGINATION
+MOVIE_PAGINATION_ROUTES = [
+    "/api/movie-page/size"
 ]

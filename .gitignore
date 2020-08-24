@@ -1,5 +1,5 @@
 # Environment files
-env/
+venv/
 .flaskenv
 
 # Vscode files
@@ -16,3 +16,9 @@ testing.py
 
 # SQLite files
 *.sqlite
+
+# IMAGES
+__movies__/
+
+# NPM modules
+frontend/

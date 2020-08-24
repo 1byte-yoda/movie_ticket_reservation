@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy.types import FLOAT
 
 from db import db
+from sqlalchemy import text
 from .screen import ScreenModel
 from .movie import MovieModel
 from .schedule import ScheduleModel
@@ -31,7 +32,7 @@ class MovieScreenModel(db.Model):
     )
     schedule_id = db.Column(db.Integer, db.ForeignKey("schedule.id"), nullable=False)
     schedule = db.relationship(ScheduleModel, backref="schedule", lazy=True)
-    db.UniqueConstraint(movie_id, screen_id, schedule_id,)
+    db.UniqueConstraint(movie_id, screen_id, schedule_id)
 
     def __init__(self, price, movie, screen, schedule):
         self.price = price
@@ -112,5 +113,5 @@ class MovieScreenListModel(MovieScreenModel):
         return list(now_showing)
     
     @classmethod
-    def find_all_owned(cls, screen_id: int) -> MovieScreenModel:
+    def find_by_screen_id(cls, screen_id: int) -> MovieScreenModel:
         return cls.query.filter_by(screen_id=screen_id).all()
