@@ -6,7 +6,7 @@ const useStyles = makeStyles(theme => ({
   bannerTitle: {
     fontSize: theme.spacing(1.4),
     textTransform: 'uppercase',
-    color: 'rgb(93, 93, 97)',
+    // color: 'rgb(93, 93, 97)',
     marginBottom: theme.spacing(1)
   },
   bannerContent: {
@@ -32,10 +32,10 @@ export default function BookingCheckout(props) {
   } = props;
 
   return (
-    <Box marginTop={2} bgcolor="rgb(18, 20, 24)">
+    <Box marginTop={2} bgcolor="common.light_grey">
       <Grid container>
         <Grid item xs={8} md={10}>
-          <Grid container spacing={3} style={{ padding: 20 }}>
+          <Grid container spacing={3} style={{ padding: 10 }}>
             {user && user.name && (
               <Grid item className={classes.hideOnSmall}>
                 <Typography className={classes.bannerTitle}>Name</Typography>

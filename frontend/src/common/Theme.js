@@ -4,7 +4,8 @@ import { createMuiTheme } from "@material-ui/core/styles";
 const RED = "#292929";
 const ORANGE = "#831010";
 const WHITE = "	#ffffff";
-const GREY = "#221f1f"
+const GREY = "#221f1f";
+const LIGHT_GREY = "#424242";
 
 export default createMuiTheme({
     /* Centralized Color System */
@@ -14,7 +15,8 @@ export default createMuiTheme({
             blue: `${RED}`,
             orange: `${ORANGE}`,
             white: `${WHITE}`,
-            grey: `${GREY}`
+            grey: `${GREY}`,
+            light_grey: `${LIGHT_GREY}`
         },
         primary: {
             main: `${RED}`

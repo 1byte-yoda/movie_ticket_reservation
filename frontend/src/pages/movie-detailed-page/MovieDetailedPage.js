@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {makeStyles} from "@material-ui/core/styles";
+import { makeStyles, useTheme } from "@material-ui/core/styles";
+import useMediaQuery from "@material-ui/core/useMediaQuery";
 import Box from "@material-ui/core/Box";
 import Grid from "@material-ui/core/Grid";
 import Card from "@material-ui/core/Card";
@@ -8,6 +9,8 @@ import CardMedia from "@material-ui/core/CardMedia";
 import Typography from "@material-ui/core/Typography";
 import ReactPlayer from 'react-player';
 import Modal from '@material-ui/core/Modal';
+import Dialog from "@material-ui/core/Dialog";
+import DialogContent from "@material-ui/core/DialogContent";
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import IconButton from "@material-ui/core/IconButton";
 import Fade from '@material-ui/core/Fade';
@@ -15,16 +18,27 @@ import Rating from '@material-ui/lab/Rating';
 import DateRange from "@material-ui/icons/DateRange";
 import Avatar from '@material-ui/core/Avatar';
 import Button from "@material-ui/core/Button";
+import Select from '@material-ui/core/Select';
+import MenuItem from "@material-ui/core/MenuItem";
+import InputLabel from "@material-ui/core/InputLabel";
+import FormControl from '@material-ui/core/FormControl';
 
 import BookingSeats from "../../components/booking-seats/BookingSeats"
 import BookingCheckout from "../../components/booking-checkout/BookingCheckout";
 
 const useStyles = makeStyles(theme => ({
     root: {
-      maxWidth: 450,
+      width: 340,
+      maxWidth: 340,
+      marginBottom: "0",
+      display: "inline-block",
+      position: "relative",
+      cursor: "pointer",
     },
     media: {
-      height: 650,
+      minHeight: 470,
+      maxHeight: 470,
+      
     },
     modal: {
         display: 'flex',
@@ -41,9 +55,8 @@ const useStyles = makeStyles(theme => ({
         width: "80px",
     },
     cardWrapper: {
-        display: "inline-block",
-        position: "relative",
-        cursor: "pointer"
+        backgroundColor: theme.palette.common.light_grey,
+        padding: "0.5em"
     }, 
     layer: {
         position: "absolute",
@@ -67,24 +80,47 @@ const useStyles = makeStyles(theme => ({
         visibility: "hidden"
     },
     bookingSeats: {
-        marginLeft: "18em"
+        marginLeft: "0"
     },
     large: {
         width: theme.spacing(8),
         height: theme.spacing(8),
+        color: "white"
     },
     reserveButton: {
         ...theme.typography.signIn,
         height: "50px",
+    },
+    reserveButtonContainer: {
+        
+        paddingBottom: "1em"
+    },
+    formControl: {
+        marginBottom: theme.spacing(2),
+        minWidth: 220,
+    },
+    title: {
+        color: "white"
+    },
+    subtitle: {
+        color: "white"
+    },
+    calendar: {
+        color: "white"
     }
   }));
 
 
 export default function MovieDetailedPage(props) {
-    const { movie } = props
+    const { movie } = props;
+    const theme = useTheme();
+    const matchesMd = useMediaQuery(theme.breakpoints.down("md"));
+    const matchesSm = useMediaQuery(theme.breakpoints.down("sm"))
+    const matchesXs = useMediaQuery(theme.breakpoints.down("xs"))
     const classes = useStyles();
     const [openYoutubeModal, setOpenYoutubeModal] = useState(false);
     const [openReserveModal, setOpenReserveModal] = useState(false);
+    const [schedule, setSchedule] = useState(10);
 
     const handlePlayButtonClick = () => {
         setOpenYoutubeModal(true);
@@ -94,11 +130,15 @@ export default function MovieDetailedPage(props) {
         setOpenReserveModal(true);
     }
     
+    const handleScheduleChange = (event) => {
+        setSchedule(event.target.value);
+    }
+
     console.log(movie)
     return (
         <Box bgcolor="common.grey" pb={2} pt={2} pr={8} pl={8}>
             <Grid container>
-                <Grid item className={classes.cardWrapper} lg={4}>
+                <Grid item container className={classes.cardWrapper} lg={3}>
                     <Card className={classes.root}>
                         <CardMedia
                         className={classes.media}
@@ -112,13 +152,34 @@ export default function MovieDetailedPage(props) {
                             </IconButton>
                         </div>
                     </Card>
+                    <Grid item container justify="center" className={classes.reserveButtonContainer}>
+                        <Button onClick={handleReserveButtonClick}
+                                color="secondary"
+                                variant="contained"
+                                className={classes.reserveButton}
+                                fullWidth
+                        >
+                            Reserve a Ticket
+                        </Button>
+                    </Grid>
+                    <Grid item container justify="center" className={classes.reserveButtonContainer}>
+                        <Button onClick={handlePlayButtonClick}
+                                color="secondary"
+                                variant="contained"
+                                className={classes.reserveButton}
+                                fullWidth
+                                
+                        >
+                            Watch Trailer
+                        </Button>
+                    </Grid>
                 </Grid>
                 
-                <Grid item container direction="column" lg={8}>
+                <Grid item container direction="column" lg={9}>
                     <Box ml={2} mb={3} style={{padding: "0.5em", backgroundColor: "#424242"}}>
                         <Grid item container>
                             <Grid item>
-                                <Typography variant="h3">{movie.name}</Typography>
+                                <Typography className={classes.title} variant="h3">{movie.name}</Typography>
                             </Grid>
                         </Grid>
                         <Grid item container style={{marginTop: "0.25em"}}>
@@ -141,49 +202,54 @@ export default function MovieDetailedPage(props) {
                         </Grid>
                         <Grid item container style={{marginTop: "1.25em"}}>
                             <Grid item style={{marginRight: "0.25em"}}>
-                                <DateRange/> 
+                                <DateRange className={classes.calendar}/> 
                             </Grid>
                             <Grid item>
-                                <Typography >{movie.release_date}</Typography>
+                                <Typography >{movie.release_date} onwards</Typography>
                             </Grid>
                         </Grid>
                     </Box>
-                    <Box ml={2} mt={1} style={{height: "415px", padding: "0.5em", backgroundColor: "#424242"}}>
+                    <Box ml={2} mt={1} style={{minHeight: "430px", padding: "0.5em", backgroundColor: "#424242"}}>
                         <Grid item style={{marginBottom: "0.25em"}}>
-                            <Typography variant="h6">Synopsis</Typography>
+                            <Typography className={classes.subtitle} variant="h6">Synopsis</Typography>
                         </Grid>
                         <Grid item>
                             <Typography variant="body1">{movie.description}</Typography>
                         </Grid>
                         <Grid item container direction="column" style={{marginTop: "3.25em"}}>
                             <Grid item>
-                                <Typography variant="h6">Casts</Typography>
+                                <Typography className={classes.subtitle} variant="h6">Cast</Typography>
                             </Grid>
-                            <Grid item container>
-                                {movie.casts.slice(0, 5).map((name, index) => (
-                                    <Grid key={index} style={{marginRight: "0.5em"}} item>
-                                        <Avatar className={classes.large}>{name[0]}</Avatar>
-                                    </Grid>
-                                ))}
+                            <Grid item>
+                                <Grid item container>
+                                    {movie.casts.slice(0, 5).map((name, index) => (
+                                        <Grid key={index} style={{marginRight: "1em"}} item>
+                                            <Grid item container direction="column"> 
+                                                <Grid item>
+                                                    <Avatar className={classes.large}>{name[0]}</Avatar>
+                                                </Grid>
+                                                <Grid key={index} style={{marginTop: "0.25em", color: "white"}} item component={Link}>
+                                                    <Box 
+                                                        textAlign="center"
+                                                        className={classes.large}
+                                                        component="div"
+                                                        whiteSpace="normal"
+                                                    >
+                                                        {name}
+                                                    </Box>
+                                                </Grid>
+                                            </Grid>
+                                        </Grid>
+                                    ))}
+                                </Grid>
                             </Grid>
                         </Grid>
-                        <Grid item container direction="column" style={{marginTop: "3.25em"}}>
+                        <Grid item container direction="column" style={{marginTop: "3em"}}>
                             <Grid item style={{marginBottom: "0.25em"}}>
-                                <Typography variant="h6">Created by</Typography>
+                                <Typography className={classes.subtitle} variant="h6">Created by</Typography>
                             </Grid>
                             <Grid item>
                                 <Typography component={Link} variant="body1" >{movie.company}</Typography>
-                            </Grid>
-                        </Grid>
-                        <Grid item container style={{marginTop: "1em"}} justify="flex-end">
-                            <Grid item>
-                                <Button onClick={handleReserveButtonClick}
-                                        color="secondary"
-                                        variant="contained"
-                                        className={classes.reserveButton}
-                                >
-                                    Reserve a Ticket
-                                </Button>
                             </Grid>
                         </Grid>
                     </Box>
@@ -196,32 +262,80 @@ export default function MovieDetailedPage(props) {
             onClose={(event) => setOpenYoutubeModal(false)}
             >
                 <Fade in={openYoutubeModal}>
-                    <ReactPlayer url={`https://www.youtube.com/watch?v=${JSON.parse(movie.youtube)[0].key}`} playing/>
+                    <ReactPlayer url={`https://www.youtube.com/watch?v=${JSON.parse(movie.youtube).length ? JSON.parse(movie.youtube)[0].key : "#"}`} playing/>
                 </Fade>
             </Modal>
-            <Modal
-            className={classes.modal}
+            <Dialog
+            PaperProps={{style:
+            {
+                paddingTop: "2em",
+                paddingBottom: "2em",
+                paddingLeft: matchesXs ? 0 : matchesSm ? "5em" : matchesMd ? "10em" : "15em",
+                paddingRight: matchesXs ? 0 : matchesSm ? "5em" : matchesMd ? "10em" : "15em"
+            }}}
+            style={{zIndex: 1302}}
+            fullScreen={matchesXs}
             open={openReserveModal}
-            disableEnforceFocus
-            onClose={(event) => setOpenYoutubeModal(false)}
+            onClose={(event) => setOpenReserveModal(false)}
             >
                 <Fade in={openReserveModal}>
-                    <Grid container item lg={8}>
-                        <Grid item className={classes.bookingSeats}>
-                            <BookingSeats
-                            seats={[[4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-                                [4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-                                [4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-                                [4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-                                [4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-                                ]}
-                            />
-                            <BookingCheckout
-                            />
+                    <DialogContent style={{overflow: "visible"}}>
+                        <Grid container item direction="column" spacing={2} >
+                            <Grid item container justify="space-between">
+                                <Grid item>
+                                        <FormControl className={classes.formControl}>
+                                            <InputLabel id="demo-simple-select-label">Theatre</InputLabel>
+                                            <Select
+                                                labelId="demo-simple-select-label"
+                                                id="demo-simple-select"
+                                                fullWidth
+                                                value={schedule}
+                                                onChange={handleScheduleChange}
+                                                MenuProps={{style: {zIndex: 2000}}}
+                                            >
+                                                <MenuItem value={10}>Ten</MenuItem>
+                                                <MenuItem value={20}>Twenty</MenuItem>
+                                                <MenuItem value={30}>Thirty</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item>
+                                        <FormControl className={classes.formControl}>
+                                            <InputLabel id="demo-simple-select-label">Schedule</InputLabel>
+                                            <Select
+                                                labelId="demo-simple-select-label"
+                                                id="demo-simple-select"
+                                                value={schedule}
+                                                fullWidth
+                                                onChange={handleScheduleChange}
+                                                MenuProps={{style: {zIndex: 2000}}}
+                                            >
+                                                <MenuItem value={10}>Ten</MenuItem>
+                                                <MenuItem value={20}>Twenty</MenuItem>
+                                                <MenuItem value={30}>Thirty</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                            </Grid>
+                            <Grid item>
+                                <BookingSeats
+                                seats={[[4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+                                    [4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+                                    [4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+                                    [4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+                                    [4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+                                    [4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+                                    ]}
+                                />
+                            </Grid>
+                            <Grid item>
+                                <BookingCheckout
+                                    />
+                            </Grid>
                         </Grid>
-                    </Grid>
+                    </DialogContent>
                 </Fade>
-            </Modal>
+            </Dialog>
         </Box>
         
     )

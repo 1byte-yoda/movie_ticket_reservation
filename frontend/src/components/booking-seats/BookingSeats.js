@@ -59,7 +59,7 @@ export default function BookingSeats(props) {
 
   return (
     <Fragment>
-      <Box width={1} pt={15}>
+      <Box width={1}>
         {seats.length > 0 &&
           seats.map((seatRows, indexRow) => (
             <div key={indexRow} className={classes.row}>
@@ -72,7 +72,7 @@ export default function BookingSeats(props) {
                     seat === 1
                       ? 'rgb(65, 66, 70)'
                       : seat === 2
-                      ? 'rgb(120, 205, 4)'
+                      ? 'rgb(120, 0, 0)'
                       : seat === 3
                       ? 'rgb(14, 151, 218)'
                       : 'rgb(96, 93, 169)'
@@ -83,15 +83,14 @@ export default function BookingSeats(props) {
             </div>
           ))}
       </Box>
-      <Box>
-            <Box
-                className={classes.screen}
-                bgcolor="red"
-            >
-                <Typography style={{textAlign: "center"}}>
-                    SCREEN
-                </Typography>
-            </Box>
+
+      <Box
+          className={classes.screen}
+          bgcolor="black"
+      >
+          <Typography style={{textAlign: "center", color: 'rgb(120, 205, 4)'}}>
+              SCREEN
+          </Typography>
       </Box>
       <Box width={1} mt={3}>
         <div className={classes.seatInfoContainer}>
@@ -104,7 +103,7 @@ export default function BookingSeats(props) {
           <div className={classes.seatInfo}>
             <div
               className={classes.seatInfoLabel}
-              style={{ background: 'rgb(65, 66, 70)' }}></div>
+              style={{ background: 'rgb(120, 0, 0)' }}></div>
             Reserved Seat
           </div>
           <div className={classes.seatInfo}>
