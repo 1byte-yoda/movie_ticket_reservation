@@ -25,17 +25,9 @@ class SeatReservationModel(db.Model):
     movie_screen_id = db.Column(
         db.Integer, db.ForeignKey("movie_screen.id"), nullable=False
     )
-    movie_screen = db.relationship(MovieScreenModel, backref="movie_screen")
+    movie_screen = db.relationship(MovieScreenModel, backref="movie_screen", lazy=True)
     promo_id = db.Column(db.Integer)
     db.UniqueConstraint(seat_id, reservation_id, movie_screen_id,)
-
-    def __repr__(self) -> str:
-        """Str representation of the seat reservation model."""
-        return (
-            f"<SeatReservationModel seat={self.seat_id},"
-            "reservation={self.reservation_id},"
-            "movie_screen={self.movie_screen_id}>"
-        )
 
     def json(self):
         """JSON represation of SeatReservationModel."""
@@ -43,8 +35,8 @@ class SeatReservationModel(db.Model):
             "id": self.id,
             "reservation": self.reservation.json(),
             "cinema": self.movie_screen.screen.cinema.json(),
-            "screen": {"id": self.movie_screen.json()},
-            "seat": {"id": self.seats.json()}
+            "screen": self.movie_screen.json(),
+            "seat": self.seats.json()
         }
 
     @classmethod

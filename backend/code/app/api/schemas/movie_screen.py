@@ -50,11 +50,10 @@ class MovieScreenSchema(Schema):
         return _conflicting_schedules
 
     @classmethod
-    def check_schedule_durations(cls, base_time: str, _schedules: list) -> list:
+    def check_schedule_durations(cls, base_time: int, _schedules: list) -> list:
         _wrong_durations = list()
         date_time_format = "%Y-%m-%d %H:%M:%S"
-        _time_format = "%H:%M:%S"
-        base_time = datetime.strptime(base_time, _time_format).time()
+        time_format = "%H:%M:%S"
         for sched in _schedules:
             _play_datetime = datetime.strptime(
                 sched["play_datetime"], date_time_format
@@ -66,7 +65,9 @@ class MovieScreenSchema(Schema):
                 datetime.combine(date.min, _end_datetime) -
                 datetime.combine(date.min, _play_datetime)
             )
-            _duration = (datetime.min + _duration).time()
+            _duration = (datetime.min + _duration).time().strftime(time_format)
+            (h, m, s) = _duration.split(':')
+            _duration = int(h) * 60 + int(m)
             if _duration < base_time:
                 _wrong_durations.append(sched)
         return _wrong_durations

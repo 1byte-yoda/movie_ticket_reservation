@@ -4,6 +4,7 @@ import { ThemeProvider } from "@material-ui/styles";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import axios from "axios";
 
+import { isLoggedIn } from "../authentication/Auth";
 import Header from "../common/Header";
 import Footer from "../common/Footer";
 import theme from "../common/Theme";
@@ -15,15 +16,17 @@ import MovieDetailedPage from "../pages/movie-detailed-page/MovieDetailedPage"
 
 function App() {
   const PAGINATION_SIZE = 20;
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [value, setValue] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [value, setValue] = useState(null);
   const [movies, setMovies] = useState([])
   const [pageSize, setPageSize] = useState(20);
+  const [openSignIn, setOpenSignIn] = useState(false);
+
 
   useEffect(() => {
     let _pageSize = 20;
     axios.all([
-        axios.get("/api/movies")
+        axios.get("/api/movies"),
     ])
     .then(axios.spread((_movies) => {
       
@@ -53,6 +56,9 @@ function App() {
         setValue={setValue}
         selectedIndex={selectedIndex}
         setSelectedIndex={setSelectedIndex}
+        isLoggedIn={isLoggedIn()}
+        openSignIn={openSignIn}
+        setOpenSignIn={setOpenSignIn}
         />
         <Switch>
           <Route
@@ -75,16 +81,20 @@ function App() {
                 page={index}
                 movies={getMovies(index)}
                 setValue={setValue}
+                setSelectedIndex={setSelectedIndex}
                 />
               }
             />
           )}
-          <Route exact path="/movies/action" component={()=> <div style={{height: "300px"}}>Action Movies</div>}/>
-          <Route exact path="/movies/comedy" component={()=> <div style={{height: "300px"}}>Comedy Movies</div>}/>
-          <Route exact path="/movies/drama" component={()=> <div style={{height: "300px"}}>Drama Movies</div>}/>
-          <Route exact path="/movies/scifi" component={()=> <div style={{height: "300px"}}>Sci-fi Movies</div>}/>
+          <Route exact path="/movies/now-showing" component={()=> <div style={{height: "300px"}}>Now Showing</div>}/>
+          <Route exact path="/movies/coming-soon" component={()=> <div style={{height: "300px"}}>Coming Soon</div>}/>
+          <Route exact path="/movies/recommended" component={()=> <div style={{height: "300px"}}>Recommended Movies</div>}/>
           {movies.map((movie, index) => (
-              <Route exact path={`/movie/${movie.id}`} component={()=><MovieDetailedPage movie={movie}/>}/>
+              <Route exact path={`/movie/${movie.id}`} component={()=><MovieDetailedPage 
+                isLoggedIn={isLoggedIn()}
+                openSignIn={openSignIn}
+                setOpenSignIn={setOpenSignIn}
+                setValue={setValue} movie={movie}/>}/>
           ))}
           <Route exact path="/cinemas" component={()=> <div style={{height: "300px"}}>Cinemas</div>}/>
           <Route exact path="/about" component={()=> <div style={{height: "300px"}}>About Us</div>}/>

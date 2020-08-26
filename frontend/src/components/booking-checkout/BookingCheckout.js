@@ -25,10 +25,9 @@ export default function BookingCheckout(props) {
   const classes = useStyles(props);
   const {
     user,
-    ticketPrice,
+    price,
     selectedSeats,
     seatsAvailable,
-    onBookSeats
   } = props;
 
   return (
@@ -57,7 +56,7 @@ export default function BookingCheckout(props) {
             <Grid item>
               <Typography className={classes.bannerTitle}>Price</Typography>
               <Typography className={classes.bannerContent}>
-                {ticketPrice * selectedSeats} &euro;
+              &#8369; {price * 1} 
               </Typography>
             </Grid>
           </Grid>
@@ -75,7 +74,8 @@ export default function BookingCheckout(props) {
             color="inherit"
             fullWidth
             disabled={seatsAvailable <= 0}
-            onClick={() => onBookSeats()}>
+            // onClick={() => onBookSeats()}
+          >
             Checkout
           </Button>
         </Grid>

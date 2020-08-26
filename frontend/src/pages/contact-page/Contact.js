@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import {Link} from "react-router-dom";
-import {makeStyles, useTheme} from "@material-ui/core/styles";
+import { makeStyles } from "@material-ui/core/styles";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
@@ -66,8 +65,6 @@ const useStyles = makeStyles(theme => ({
 
 export default function Contact(){
     const classes = useStyles();
-    const theme = useTheme();
-
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [emailHelper, setEmailHelper] = useState("");

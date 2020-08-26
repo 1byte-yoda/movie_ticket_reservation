@@ -17,15 +17,14 @@ class MovieSchema(Schema):
     rating = fields.Float(allow_none=True)
     release_date = fields.Date(required=True, format="%Y-%m-%d")
     price = fields.Float()
-    company = fields.Str()
-    genre = fields.Str()
+    company = fields.Str(allow_none=True)
+    genre = fields.Str(allow_none=True)
     casts = fields.List(fields.Str())
     youtube = fields.Str()
 
     @post_load
     def serialize_datetime(self, in_data, **kwargs):
         in_data["release_date"] = in_data["release_date"].strftime("%Y-%m-%d")
-        in_data["duration"] = in_data["duration"].strftime("%H:%M:%S")
         return in_data
 
     # @pre_dump

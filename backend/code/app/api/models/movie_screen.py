@@ -115,3 +115,7 @@ class MovieScreenListModel(MovieScreenModel):
     @classmethod
     def find_by_screen_id(cls, screen_id: int) -> MovieScreenModel:
         return cls.query.filter_by(screen_id=screen_id).all()
+
+    @classmethod
+    def find_screens_by_movie(cls, movie_id: int) -> MovieScreenModel:
+        return cls.query.filter_by(movie_id=movie_id).all()

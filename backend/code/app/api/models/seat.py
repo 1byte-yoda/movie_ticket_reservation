@@ -87,16 +87,14 @@ class SeatListModel(SeatModel):
     """
 
     @classmethod
-    def find_existing_seats(cls, *, screen_id, seat_id_list: list) -> List[SeatModel]:
-        """Find all of existing seats w.r.t screen and array of seat.
+    def find_all_seats(cls, *, screen_id) -> List[SeatModel]:
+        """Find all of existing seats w.r.t screen
 
-        Find all seats within a specified screen and also
-        within a specified array of seat.
+        Find all seats within a specified screen.
         """
         seat_list = (
             cls.query.with_entities(cls.id)
             .filter(SeatModel.screen_id == screen_id)
-            .filter(SeatModel.id.in_(seat_id_list))
             .all()
         )
         return list(*zip(*seat_list))
@@ -104,7 +102,7 @@ class SeatListModel(SeatModel):
     @classmethod
     def find_seats_by_screen(cls, screen_id: int) -> List[SeatModel]:
         """Find a list of seats that is within a specified screen."""
-        return cls.query.filter_by(screen_id=screen_id).all()
+        return list(map(lambda x: x.id, cls.query.filter_by(screen_id=screen_id).all()))
 
     @classmethod
     def save_all(cls, *, seats: list):

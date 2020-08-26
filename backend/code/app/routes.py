@@ -93,3 +93,15 @@ MOVIE_LIST_ROUTES = [
 MOVIE_PAGINATION_ROUTES = [
     "/api/movie-page/size"
 ]
+
+
+# SEAT_RESERVED
+SEATS_RESERVED_ROUTES = [
+    "/api/seat/reserved-seats"
+]
+
+
+# SCREEN_BY_MOVIE
+MOVIE_SCREEN_BY_MOVIE_ROUTES = [
+    "/api/movie-screens/<int:movie_id>"
+]

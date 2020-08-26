@@ -12,6 +12,7 @@ from db import db
 from ..models.seat_reservation import SeatReservationModel, SeatReservationListModel
 from ..models.movie_screen import MovieScreenModel
 from ..models.reservation import ReservationModel
+from ..models.seat import SeatListModel
 from .response_messages import (
     SEAT_RESERVATION_NOT_FOUND_MESSAGE_404,
     INVALID_REQUEST_ADMIN_MESSAGE_401,
@@ -49,7 +50,6 @@ class SeatReservationResource(Resource):
                 seat_reservation = SeatReservationModel.find(data=seat_reservation_data)
             except:
                 return {"message": UNKNOWN_ERROR_MESSAGE_500}, 500
-
             if seat_reservation:
                 try:
                     seat_reservation = cls.schema.dump(seat_reservation[0].json())
@@ -104,7 +104,10 @@ class SeatReservationResource(Resource):
         largest_seat_id = len(seat_id_list)
         if largest_seat_id > max_screen_capacity:
             return ({"message": SEATS_NOT_FOUND_MESSAGE_404}, 404)
-
+        valid_seats = SeatListModel.find_all_seats(screen_id=screen_id)
+        all_seats_valid = all([x in valid_seats for x in seat_id_list])
+        if not all_seats_valid:
+            return ({"message": SEATS_NOT_FOUND_MESSAGE_404}, 404)
         try:
             occupied_seats = SeatReservationListModel.which_occupied(
                 seat_id_list=seat_id_list, movie_screen=movie_screen,
@@ -158,7 +161,7 @@ class SeatReservationResource(Resource):
 
         try:
             tickets = []
-            # tickets = cls.schema.dump(seat_reservation_list, many=True)
+            tickets = cls.schema.dump(seat_reservation_list, many=True)
         except Exception as e:
             db.session.rollback()
             db.session.flush()

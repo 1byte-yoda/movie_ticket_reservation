@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import useMediaQuery from "@material-ui/core/useMediaQuery";
@@ -22,6 +22,7 @@ import Select from '@material-ui/core/Select';
 import MenuItem from "@material-ui/core/MenuItem";
 import InputLabel from "@material-ui/core/InputLabel";
 import FormControl from '@material-ui/core/FormControl';
+import axios from "axios";
 
 import BookingSeats from "../../components/booking-seats/BookingSeats"
 import BookingCheckout from "../../components/booking-checkout/BookingCheckout";
@@ -97,7 +98,7 @@ const useStyles = makeStyles(theme => ({
     },
     formControl: {
         marginBottom: theme.spacing(2),
-        minWidth: 220,
+        minWidth: 150,
     },
     title: {
         color: "white"
@@ -112,27 +113,105 @@ const useStyles = makeStyles(theme => ({
 
 
 export default function MovieDetailedPage(props) {
-    const { movie } = props;
+    const { movie, setValue, isLoggedIn, openSignIn, setOpenSignIn } = props;
     const theme = useTheme();
     const matchesMd = useMediaQuery(theme.breakpoints.down("md"));
     const matchesSm = useMediaQuery(theme.breakpoints.down("sm"))
     const matchesXs = useMediaQuery(theme.breakpoints.down("xs"))
     const classes = useStyles();
+    let isRendered = useRef(false);
     const [openYoutubeModal, setOpenYoutubeModal] = useState(false);
     const [openReserveModal, setOpenReserveModal] = useState(false);
-    const [schedule, setSchedule] = useState(10);
+    const [schedules, setSchedules] = useState({});
+    const [dates, setDates] = useState([]);
+    const [screens, setScreens] = useState([]);
+    const [schedule, setSchedule] = useState("Schedule");
+    const [screen, setScreen] = useState("Theatre");
+    const [seats, setSeats] = useState([]);
+    const [movieScreens, setMovieScreens] = useState([]);
+
+
+    function getMovieScreen(isRendered) {
+        axios.get(`/api/movie-screens/${movie.id}`)
+            .then((_movieScreens) => {
+                if (!isRendered.current) {
+                    setMovieScreens(_movieScreens);
+                }
+            })
+            .catch((error) =>
+                console.log(error)
+            )
+    }
+
+    function getScreenSchedule(isRendered) {
+        axios.get(`/api/movie-screens/${screen.id}`)
+            .then((_movieScreens) => {
+                if (!isRendered.current) {
+                    setMovieScreens(_movieScreens);
+                }
+            })
+            .catch((error) =>
+                console.log(error)
+            )
+    }
 
     const handlePlayButtonClick = () => {
-        setOpenYoutubeModal(true);
+        setOpenYoutubeModal(!openYoutubeModal);
     }
 
     const handleReserveButtonClick = () => {
-        setOpenReserveModal(true);
+        if (!isLoggedIn) {
+            setOpenSignIn(!openSignIn)
+        }
+        else {
+            let _temp_date = null;
+            let _temp_schedule, _temp_play_time, _temp_end_time;
+            let _temp_schedule_json = {};
+            let _temp_screens = new Array();
+            let _temp_screen = {};
+            let _temp_screen_id = null;
+
+            movieScreens.data.payload.forEach((element, index) => {
+                _temp_schedule = element.schedule
+                _temp_date = _temp_schedule.play_datetime.split(" ")[0]
+                _temp_play_time = _temp_schedule.play_datetime.split(" ")[1]
+                _temp_end_time = _temp_schedule.end_datetime.split(" ")[1]
+                _temp_screen = element.screen
+                _temp_screens[index] = _temp_screen;
+                if (_temp_schedule_json[_temp_date] === undefined) {
+                    _temp_schedule_json[_temp_date] = new Array();
+                }
+                _temp_schedule_json[_temp_date][index] = {
+                    "id": _temp_schedule.id,
+                    "play_time": _temp_play_time,
+                    "end_time": _temp_end_time
+                }
+                
+            });
+            setSchedules(_temp_schedule_json);
+            setDates(Object.keys(_temp_schedule_json));
+            let unique_screens = [...new Map(_temp_screens.map(item => [item["id"], item])).values()]
+            setScreens(unique_screens);
+            setOpenReserveModal(!openReserveModal);
+        }
     }
     
     const handleScheduleChange = (event) => {
         setSchedule(event.target.value);
     }
+
+    const handleScreenChange = (event) => {
+        setScreen(event.target.value);
+    }
+    
+
+    useEffect(() => {
+        setValue(1);
+        getMovieScreen(isRendered);
+        return () => {
+            isRendered.current = true;
+        };
+    }, [setValue, getMovieScreen])
 
     console.log(movie)
     return (
@@ -187,7 +266,7 @@ export default function MovieDetailedPage(props) {
                                 <Typography style={{marginRight: "0.7em", fontWeight: "bold", color: "#ffb400"}} component="body2">{movie.rating/10*5}</Typography>
                             </Grid>
                             <Grid item>
-                                <Rating name="half-rating-read" defaultValue={0.0} precision={0.1} readOnly value={movie.rating/10*5} readOnly />
+                                <Rating name="half-rating-read" defaultValue={0.0} precision={0.1} value={movie.rating/10*5} readOnly />
                             </Grid>
                         </Grid>
                         <Grid item container style={{marginTop: "0.5em"}}>
@@ -259,7 +338,7 @@ export default function MovieDetailedPage(props) {
             className={classes.modal}
             open={openYoutubeModal}
             disableEnforceFocus
-            onClose={(event) => setOpenYoutubeModal(false)}
+            onClose={handlePlayButtonClick}
             >
                 <Fade in={openYoutubeModal}>
                     <ReactPlayer url={`https://www.youtube.com/watch?v=${JSON.parse(movie.youtube).length ? JSON.parse(movie.youtube)[0].key : "#"}`} playing/>
@@ -276,46 +355,76 @@ export default function MovieDetailedPage(props) {
             style={{zIndex: 1302}}
             fullScreen={matchesXs}
             open={openReserveModal}
-            onClose={(event) => setOpenReserveModal(false)}
+            onClose={handleReserveButtonClick}
             >
                 <Fade in={openReserveModal}>
                     <DialogContent style={{overflow: "visible"}}>
                         <Grid container item direction="column" spacing={2} >
-                            <Grid item container justify="space-between">
+                            <Grid item container spacing={2}>
                                 <Grid item>
-                                        <FormControl className={classes.formControl}>
-                                            <InputLabel id="demo-simple-select-label">Theatre</InputLabel>
-                                            <Select
-                                                labelId="demo-simple-select-label"
-                                                id="demo-simple-select"
-                                                fullWidth
-                                                value={schedule}
-                                                onChange={handleScheduleChange}
-                                                MenuProps={{style: {zIndex: 2000}}}
-                                            >
-                                                <MenuItem value={10}>Ten</MenuItem>
-                                                <MenuItem value={20}>Twenty</MenuItem>
-                                                <MenuItem value={30}>Thirty</MenuItem>
-                                            </Select>
-                                        </FormControl>
-                                    </Grid>
-                                    <Grid item>
-                                        <FormControl className={classes.formControl}>
-                                            <InputLabel id="demo-simple-select-label">Schedule</InputLabel>
-                                            <Select
-                                                labelId="demo-simple-select-label"
-                                                id="demo-simple-select"
-                                                value={schedule}
-                                                fullWidth
-                                                onChange={handleScheduleChange}
-                                                MenuProps={{style: {zIndex: 2000}}}
-                                            >
-                                                <MenuItem value={10}>Ten</MenuItem>
-                                                <MenuItem value={20}>Twenty</MenuItem>
-                                                <MenuItem value={30}>Thirty</MenuItem>
-                                            </Select>
-                                        </FormControl>
-                                    </Grid>
+                                    <FormControl className={classes.formControl}>
+                                        <InputLabel id="select-theatre-label">Theatre</InputLabel>
+                                        <Select
+                                            labelId="select-theatre-label"
+                                            id="select-theatre"
+                                            value={screen}
+                                            onChange={handleScreenChange}
+                                            MenuProps={{style: {zIndex: 2000}}}
+                                        >
+                                            {screens.map((value, index) => 
+                                                <MenuItem
+                                                    key={index}
+                                                    value={value.id}
+                                                >
+                                                    {value.name}
+                                                </MenuItem>
+                                            )}
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+                                <Grid item>
+                                    <FormControl className={classes.formControl}>
+                                        <InputLabel id="select-schedule-label">Date</InputLabel>
+                                        <Select
+                                            labelId="select-schedule-label"
+                                            id="select-schedule"
+                                            value={schedule}
+                                            onChange={handleScheduleChange}
+                                            MenuProps={{style: {zIndex: 2000}}}
+                                        >
+                                            {dates.map((value, index) => 
+                                                <MenuItem
+                                                    key={index}
+                                                    value={schedules[value].id}
+                                                >
+                                                    {`${value}`}
+                                                </MenuItem>
+                                            )}
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+                                <Grid item>
+                                    <FormControl className={classes.formControl}>
+                                        <InputLabel id="select-schedule-label">Time</InputLabel>
+                                        <Select
+                                            labelId="select-schedule-label"
+                                            id="select-schedule"
+                                            value={schedule}
+                                            onChange={handleScheduleChange}
+                                            MenuProps={{style: {zIndex: 2000}}}
+                                        >
+                                            {dates.map((value, index) => 
+                                                schedules[value].map((time) => 
+                                                    <MenuItem
+                                                        key={index}
+                                                        value={time.id}
+                                                    >
+                                                        {`${time.play_time} - ${time.end_time}`}
+                                                    </MenuItem>
+                                                ))}
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
                             </Grid>
                             <Grid item>
                                 <BookingSeats
@@ -330,6 +439,7 @@ export default function MovieDetailedPage(props) {
                             </Grid>
                             <Grid item>
                                 <BookingCheckout
+                                price={movie.price}
                                     />
                             </Grid>
                         </Grid>

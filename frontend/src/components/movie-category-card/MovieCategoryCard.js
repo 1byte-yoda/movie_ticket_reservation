@@ -1,11 +1,9 @@
 import React from 'react';
-import { Link } from "react-router-dom";
 import classNames from 'classnames';
 import { makeStyles } from '@material-ui/core';
 import { Typography } from '@material-ui/core';
-import { Container } from '@material-ui/core/Container';
 import CustomPaper from '../../common/CustomPaper';
-import { EventSeat, Payment, DateRange } from '@material-ui/icons';
+import { Payment, DateRange } from '@material-ui/icons';
 
 const useStyles = makeStyles(theme => ({
   root: {

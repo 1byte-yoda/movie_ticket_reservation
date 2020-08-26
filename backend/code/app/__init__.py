@@ -20,12 +20,14 @@ from .api.resources.cinema import CinemaResource, CinemaUserResourse
 from .api.resources.screen import ScreenListResource, ScreenResource
 from .api.resources.movie_screen import (
     MovieScreenResource,
-    MovieScreenListResource
+    MovieScreenListResource,
+    ScreenGivenMovieResource
 )
 from .api.resources.movie import (
     MovieResource, MovieListResource, MoviePaginationResource
 )
 from .api.resources.image import ImageUpload, ImageResource
+from .api.resources.seat import ReservedSeatResource
 from .authenticate import jwt
 from .routes import (
     SEAT_RESERVATION_LIST_ROUTES,
@@ -46,7 +48,9 @@ from .routes import (
     MOVIE_ROUTES,
     MOVIE_PAGINATION_ROUTES,
     IMAGE_UPLOAD_ROUTES,
-    IMAGE_ROUTES
+    IMAGE_ROUTES,
+    SEATS_RESERVED_ROUTES,
+    MOVIE_SCREEN_BY_MOVIE_ROUTES
 )
 from db import db
 from app.config import config
@@ -80,6 +84,8 @@ def create_app(*, config_name="default") -> Flask:
     api.add_resource(MoviePaginationResource, *MOVIE_PAGINATION_ROUTES)
     api.add_resource(ImageUpload, *IMAGE_UPLOAD_ROUTES)
     api.add_resource(ImageResource, *IMAGE_ROUTES)
+    api.add_resource(ScreenGivenMovieResource, *MOVIE_SCREEN_BY_MOVIE_ROUTES)
+    api.add_resource(ReservedSeatResource, *SEATS_RESERVED_ROUTES)
 
     patch_request_class(app, 10 * 1024 * 1024)
     configure_uploads(app, IMAGE_SET)

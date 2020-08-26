@@ -8,6 +8,7 @@ import footerAdornment from "../assets/Footer Adornment.svg";
 import facebook from "../assets/facebook.svg";
 import twitter from "../assets/twitter.svg";
 import instagram from "../assets/instagram.svg";
+import zIndex from "@material-ui/core/styles/zIndex";
 
 
 const useStyles = makeStyles(theme => ({
@@ -38,7 +39,8 @@ const useStyles = makeStyles(theme => ({
         textDecoration: "none"
     },
     gridItem: {
-        margin: "2em"
+        margin: "2em",
+        zIndex: "1300"
     },
     icon: {
         height: "4em",
@@ -89,59 +91,37 @@ export default function Footer(props) {
                             <Grid
                             item
                             component={Link}
-                            to="/categories"
+                            to="/movies"
                             onClick={() => props.setValue(1)}
                             className={classes.link}
                             >
-                                Categories
+                                Movies
                             </Grid>
                             <Grid
                             item
                             component={Link}
-                            to="/categories/action"
+                            to="/movies/now-showing"
                             onClick={() => {props.setValue(1); props.setSelectedIndex(0); }}
                             className={classes.link}
                             >
-                                Action Movies
+                                Now Showing
                             </Grid>
                             <Grid
                             item
                             component={Link}
-                            to="/categories/drama"
+                            to="/movies/coming-soon"
                             onClick={() => {props.setValue(1); props.setSelectedIndex(1); }}
                             className={classes.link}
                             >
-                                Drama Movies
+                                Coming Soon
                             </Grid>
                             <Grid
                             item
                             component={Link}
-                            to="/categories/comedy"
+                            to="/movies/recommended"
                             onClick={() => {props.setValue(1); props.setSelectedIndex(2); }}
                             className={classes.link}>
-                                Comedy Movies
-                            </Grid>
-                            <Grid
-                            item
-                            component={Link}
-                            to="/categories/scifi"
-                            onClick={() => {props.setValue(1); props.setSelectedIndex(3); }}
-                            className={classes.link}
-                            >
-                                Sci-fi Movies
-                            </Grid>
-                        </Grid>
-                    </Grid>
-                    <Grid item className={classes.gridItem}>
-                        <Grid container direction="column" spacing={2}>
-                            <Grid
-                            item
-                            component={Link}
-                            to="/cinemas"
-                            onClick={() => props.setValue(2)}
-                            className={classes.link}
-                            >
-                                Cinemas
+                                Recommended Movies
                             </Grid>
                         </Grid>
                     </Grid>

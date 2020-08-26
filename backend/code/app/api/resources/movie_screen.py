@@ -1,6 +1,6 @@
 from flask_restful import Resource, request
 from flask_jwt_extended import (
-    get_current_user, get_jwt_claims, jwt_required, fresh_jwt_required
+    get_current_user, get_jwt_claims, jwt_required
 )
 from werkzeug.security import safe_str_cmp
 
@@ -14,13 +14,12 @@ from .response_messages import (
     MOVIE_SCREEN_NOT_FOUND_MESSAGE_404,
     MOVIE_SCREEN_DELETED_201,
     MOVIE_SCREEN_UPDATED_201,
-    MOVIE_NAME_EXISTS_400,
     MOVIE_NOT_FOUND_404,
     UNKNOWN_ERROR_MESSAGE_500
 )
 from ..models.screen import ScreenModel
 from ..models.movie_screen import MovieScreenModel, MovieScreenListModel
-from ..models.movie import MovieModel, MovieListModel
+from ..models.movie import MovieModel
 from ..models.schedule import ScheduleModel
 from ..schemas.movie_screen import MovieScreenSchema
 from ..schemas.movie import MovieSchema
@@ -98,6 +97,7 @@ class MovieScreenResource(Resource):
                 )
                 if not movie:
                     return ({"message": MOVIE_NOT_FOUND_404}, 404)
+                print(movie.json())
                 request_data["movie"] = cls.movie_schema.dump(movie.json())
                 request_data["movie"].pop("cinema")
                 request_data.pop("movie_id")
@@ -244,7 +244,7 @@ class MovieScreenResource(Resource):
         return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
 
 
-class MovieScreenListResource(MovieScreenResource):
+class MovieScreenListResource(Resource):
     """Contains the REST API methods for Movie-Screen-List transactions.
 
     Description
@@ -279,31 +279,29 @@ class MovieScreenListResource(MovieScreenResource):
                     return ({"message": SCREEN_NOT_FOUND_404}, 404)
                 movie_screens = MovieScreenListModel.find_by_screen_id(screen_id=screen_id)
                 movie_screens = list(map(lambda ms: ms.json(), movie_screens))
-                print(MovieScreenListModel.find_all_owned(cinema_id=user.cinema_id))
                 return ({"payload": cls.ms_schema.dump(movie_screens, many=True)}, 200)
         return ({"message": INVALID_REQUEST_ADMIN_MESSAGE_401}, 401)
 
 
-# class MovieCinemaListResource(MovieScreenResource):
-#     """Contains the REST API methods for Movie-Cinema-List transactions.
+class ScreenGivenMovieResource(Resource):
+    """Contains the REST API methods for Movie-Screen-List transactions.
 
-#     Description
-#     -----------
-#     Inherits MovieScreenReource to work with list of MovieScreens owned by a Cinema.
-#     """
+    Description
+    -----------
+    """
 
-#     ms_schema = MovieScreenSchema()
+    ms_schema = MovieScreenSchema()
 
-#     @classmethod
-#     def get(cls, page: int):
-#         """GET method that pulls all of the movie products.
+    @classmethod
+    def get(cls, movie_id: int):
+        """GET method that pulls all of the movie products.
 
-#         path : /api/movie-screens/<int:page>
+        path : /api/movie-screens/<int:movie_id>
 
-#         Description
-#         -----------
-#         This will parse all of the deployed movies.
-#         """
-#         movie_screens = MovieScreenListModel.find_movie_page(page=page)
-#         movie_screens = list(map(lambda ms: ms.json(), movie_screens))
-#         return ({"payload": cls.ms_schema.dump(movie_screens, many=True)}, 200)
+        Description
+        -----------
+        This will parse all of the deployed movies.
+        """
+        movie_screens = MovieScreenListModel.find_screens_by_movie(movie_id=movie_id)
+        movie_screens = list(map(lambda ms: ms.json(), movie_screens))
+        return ({"payload": cls.ms_schema.dump(movie_screens, many=True)}, 200)

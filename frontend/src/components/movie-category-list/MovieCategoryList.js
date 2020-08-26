@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Link } from "react-router-dom";
 import PaginationItem from "@material-ui/lab/PaginationItem"
 import Pagination from '@material-ui/lab/Pagination';
-import { makeStyles, Grid, Typography, Container, useTheme } from '@material-ui/core';
+import { makeStyles, Grid, Typography, Container } from '@material-ui/core';
 import MovieCategoryCard from '../movie-category-card/MovieCategoryCard';
-import _ from 'lodash';
-import useMediaQuery from "@material-ui/core/useMediaQuery";
 
 
 const useStyles = makeStyles(theme => ({
@@ -40,9 +38,11 @@ const useStyles = makeStyles(theme => ({
 
 function MovieCategoryList(props) {
   const classes = useStyles(props);
-  const theme = useTheme();
-  const matches = useMediaQuery(theme.breakpoints.down("xs"));
-  const { pageSize, page, movies, setValue } = props;
+  const { pageSize, page, movies, setValue, setSelectedIndex } = props;
+
+  useEffect(() => {
+    setSelectedIndex(null);
+  })
   // const [selectedYear, setSeletedYear] = useState(() => [movieDates[0].year])
   // const [selectedMonth, setSeletedMonth] = useState(() => ["Aug"])
   // const [monthsToDisable, setmonthsToDisable] = useState(() => movieDates[0].months)
